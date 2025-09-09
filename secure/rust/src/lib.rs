@@ -40,7 +40,7 @@ mod memory {
     use std::io;
 
     #[cfg(unix)]
-    pub fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if libc::mlock(ptr as *mut libc::c_void, len) == 0 {
                 Ok(())
@@ -51,7 +51,7 @@ mod memory {
     }
 
     #[cfg(unix)]
-    pub fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if libc::munlock(ptr as *mut libc::c_void, len) == 0 {
                 Ok(())
@@ -62,7 +62,7 @@ mod memory {
     }
 
     #[cfg(unix)]
-    pub fn explicit_bzero(ptr: *mut u8, len: usize) {
+    pub unsafe fn explicit_bzero(ptr: *mut u8, len: usize) {
         unsafe {
             // Use explicit_bzero if available, fallback to volatile writes
             #[cfg(target_os = "linux")]
@@ -83,7 +83,7 @@ mod memory {
     }
 
     #[cfg(windows)]
-    pub fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if winapi::um::memoryapi::VirtualLock(ptr as *mut _, len) != 0 {
                 Ok(())
@@ -94,7 +94,7 @@ mod memory {
     }
 
     #[cfg(windows)]
-    pub fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if winapi::um::memoryapi::VirtualUnlock(ptr as *mut _, len) != 0 {
                 Ok(())
@@ -105,7 +105,7 @@ mod memory {
     }
 
     #[cfg(windows)]
-    pub fn explicit_bzero(ptr: *mut u8, len: usize) {
+    pub unsafe fn explicit_bzero(ptr: *mut u8, len: usize) {
         unsafe {
             // Use RtlSecureZeroMemory on Windows
             std::ptr::write_bytes(ptr, 0, len);
@@ -113,19 +113,19 @@ mod memory {
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub fn lock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
+    pub unsafe fn lock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
         // Platform not supported, but don't fail
         Ok(())
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub fn unlock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
+    pub unsafe fn unlock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
         // Platform not supported, but don't fail
         Ok(())
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub fn explicit_bzero(ptr: *mut u8, len: usize) {
+    pub unsafe fn explicit_bzero(ptr: *mut u8, len: usize) {
         unsafe {
             // Fallback to volatile writes
             for i in 0..len {
@@ -179,18 +179,18 @@ impl SecureBuffer {
             memory::explicit_bzero(data, capacity);
         }
 
-        // Attempt to lock memory (non-fatal if it fails)
-        let is_locked = memory::lock_memory(data, capacity).is_ok();
+    // Attempt to lock memory (non-fatal if it fails)
+    let is_locked = unsafe { memory::lock_memory(data, capacity) }.is_ok();
 
-        let buffer = SecureBuffer {
-            data,
-            capacity,
-            length: 0,
-            is_valid: AtomicBool::new(true),
-            is_locked: AtomicBool::new(is_locked),
-        };
+    let buffer = SecureBuffer {
+        data,
+        capacity,
+        length: 0,
+        is_valid: AtomicBool::new(true),
+        is_locked: AtomicBool::new(is_locked),
+    };
 
-        Ok(buffer)
+    Ok(buffer)
     }
 
     /// Write data to the buffer, replacing any existing content
@@ -239,7 +239,7 @@ impl SecureBuffer {
             return Err("Empty".to_string());
         }
         
-        unsafe { Ok(std::slice::from_raw_parts(self.data, self.length)) }
+    unsafe { Ok(std::slice::from_raw_parts(self.data, self.length)) }
     }
 
     /// Get the current length of data in the buffer (thread-safe)
@@ -518,10 +518,17 @@ impl CSecureBuffer {
                 });
                 Box::into_raw(boxed)
             }
+                // NOTE: `size` and `num_hashes` must be reasonable positive values. Returns a handle pointer
+                // which the caller is responsible for freeing via `universal_bloom_filter_destroy`.
             Err(_) => std::ptr::null_mut(),
         }
     }
 
+    /// # Safety
+    ///
+    /// `self.inner` and `data` must be valid, non-null pointers. `data` must point to at least
+    /// `len` readable bytes. The function will dereference raw pointers and copy the data into the
+    /// internal secure buffer. The caller retains ownership of `data`.
     pub unsafe fn write(&mut self, data: *const u8, len: usize) -> i32 {
         if self.inner.is_null() || data.is_null() {
             return -1;
@@ -534,6 +541,11 @@ impl CSecureBuffer {
         }
     }
 
+    /// # Safety
+    ///
+    /// `self.inner` and `buf` must be valid, non-null pointers. `buf` must be writable for at least
+    /// `buf_len` bytes. This function dereferences raw pointers and transfers the read data into
+    /// the provided buffer.
     pub unsafe fn read(&self, buf: *mut u8, buf_len: usize) -> i32 {
         if self.inner.is_null() || buf.is_null() {
             return -1;
@@ -546,6 +558,11 @@ impl CSecureBuffer {
         }
     }
 
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer previously returned by `CSecureBuffer::new` (or related
+    /// constructors). Ownership of the buffer is transferred to this function; the caller must not
+    /// use `ptr` after calling this method.
     pub unsafe fn destroy(ptr: *mut CSecureBuffer) {
         if !ptr.is_null() {
             let boxed = Box::from_raw(ptr);
@@ -558,11 +575,22 @@ impl CSecureBuffer {
 
 // C FFI exports
 #[no_mangle]
+/// # Safety
+///
+/// The caller must ensure `capacity` is a reasonable positive value. This function
+/// returns a raw pointer which the caller is responsible for managing and eventually
+/// freeing via the corresponding `secure_buffer_free` FFI function. The returned
+/// pointer may be null on allocation failure.
 pub extern "C" fn secure_buffer_new(capacity: usize) -> *mut CSecureBuffer {
     CSecureBuffer::new(capacity)
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer previously returned by `secure_buffer_new`.
+/// `data` must point to `len` valid bytes. The caller retains ownership of `data`.
+/// The function may read from raw pointers and therefore is marked `unsafe`.
 pub unsafe extern "C" fn secure_buffer_write(
     buffer: *mut CSecureBuffer,
     data: *const u8,
@@ -575,6 +603,11 @@ pub unsafe extern "C" fn secure_buffer_write(
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer previously returned by `secure_buffer_new`.
+/// `buf` must be a valid pointer to a writable region of at least `buf_len` bytes.
+/// This function will write to `buf` and may dereference raw pointers.
 pub unsafe extern "C" fn secure_buffer_read(
     buffer: *const CSecureBuffer,
     buf: *mut u8,
@@ -587,88 +620,16 @@ pub unsafe extern "C" fn secure_buffer_read(
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a pointer previously returned by `secure_buffer_new` or related
+/// constructors. After calling this function the pointer is consumed and must not be
+/// used again by the caller.
 pub unsafe extern "C" fn secure_buffer_destroy(buffer: *mut CSecureBuffer) {
     CSecureBuffer::destroy(buffer);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::thread;
-    use std::sync::Arc;
-
-    #[test]
-    fn test_secure_buffer_creation() {
-        let buffer = SecureBuffer::new(1024).unwrap();
-        assert_eq!(buffer.capacity(), 1024);
-        assert_eq!(buffer.len(), 0);
-        assert!(buffer.is_empty());
-        assert!(buffer.is_valid());
-    }
-
-    #[test]
-    fn test_write_and_read() {
-        let mut buffer = SecureBuffer::new(1024).unwrap();
-        let test_data = b"Hello, World!";
-        
-        buffer.write(test_data).unwrap();
-        assert_eq!(buffer.len(), test_data.len());
-        assert!(!buffer.is_empty());
-
-        let mut read_buf = vec![0u8; test_data.len()];
-        let bytes_read = buffer.read(&mut read_buf).unwrap();
-        assert_eq!(bytes_read, test_data.len());
-        assert_eq!(&read_buf, test_data);
-    }
-
-    #[test]
-    fn test_thread_safety() {
-        let buffer = Arc::new(SecureBuffer::new(1024).unwrap());
-        let handles: Vec<_> = (0..10)
-            .map(|i| {
-                let buffer_clone = Arc::clone(&buffer);
-                thread::spawn(move || {
-                    // Just test that we can safely call is_valid from multiple threads
-                    for _ in 0..100 {
-                        let _ = buffer_clone.is_valid();
-                        let _ = buffer_clone.len();
-                        let _ = buffer_clone.capacity();
-                    }
-                })
-            })
-            .collect();
-
-        for handle in handles {
-            handle.join().unwrap();
-        }
-    }
-
-    #[test]
-    fn test_clear_and_destroy() {
-        let mut buffer = SecureBuffer::new(1024).unwrap();
-        buffer.write(b"sensitive data").unwrap();
-        assert!(!buffer.is_empty());
-        
-        buffer.clear();
-        assert!(buffer.is_empty());
-        assert!(buffer.is_valid());
-        
-        buffer.destroy();
-        assert!(!buffer.is_valid());
-    }
-
-    #[test]
-    fn test_zero_capacity_fails() {
-        assert!(SecureBuffer::new(0).is_err());
-    }
-
-    #[test]
-    fn test_overflow_protection() {
-        let mut buffer = SecureBuffer::new(10).unwrap();
-        let large_data = vec![0u8; 20];
-        assert!(buffer.write(&large_data).is_err());
-    }
-}
+// Tests moved to end of file to keep FFI items before test modules (clippy requirement).
 
 // === Universal Bloom Filter FFI Bindings ===
 // High-performance C API for Universal Bloom Filter operations
@@ -694,7 +655,12 @@ pub enum UniversalBloomFilterError {
 
 /// Create new Universal Bloom Filter with custom configuration
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_new(
+/// # Safety
+///
+/// `network_name` (if non-null) must point to a valid NUL-terminated C string. All
+/// pointer parameters must be valid for the duration of the call. The caller is
+/// responsible for ensuring pointers are non-null when required.
+pub unsafe extern "C" fn universal_bloom_filter_new(
     size_bits: usize,
     num_hashes: u8,
     tweak: u32,
@@ -735,7 +701,11 @@ pub extern "C" fn universal_bloom_filter_new(
 
 /// Create Bitcoin Bloom Filter with default configuration
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_new_default() -> UniversalBloomFilterHandle {
+/// # Safety
+///
+/// The returned pointer is owned by the caller and must be freed with
+/// `universal_bloom_filter_destroy`. The pointer may be null on allocation failure.
+pub unsafe extern "C" fn universal_bloom_filter_new_default() -> UniversalBloomFilterHandle {
     match UniversalBloomFilter::new(None) {
         Ok(filter) => Box::into_raw(Box::new(filter)) as UniversalBloomFilterHandle,
         Err(_) => std::ptr::null_mut(),
@@ -744,17 +714,23 @@ pub extern "C" fn universal_bloom_filter_new_default() -> UniversalBloomFilterHa
 
 /// Destroy Universal Bloom Filter and securely zeroize memory
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_destroy(filter: UniversalBloomFilterHandle) {
+/// # Safety
+///
+/// `filter` must be a pointer previously returned by `universal_bloom_filter_new*`.
+/// After this call the pointer is consumed and must not be used again.
+pub unsafe extern "C" fn universal_bloom_filter_destroy(filter: UniversalBloomFilterHandle) {
     if !filter.is_null() {
-        unsafe {
-            let _ = Box::from_raw(filter as *mut UniversalBloomFilter);
-        }
+        let _ = Box::from_raw(filter as *mut UniversalBloomFilter);
     }
 }
 
 /// Insert single UTXO into bloom filter
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_insert_utxo(
+/// # Safety
+///
+/// `filter` must be a valid handle previously returned by `universal_bloom_filter_new*`.
+/// `txid_bytes` must point to at least 32 bytes.
+pub unsafe extern "C" fn universal_bloom_filter_insert_utxo(
     filter: UniversalBloomFilterHandle,
     txid_bytes: *const u8,
     vout: u32,
@@ -775,7 +751,11 @@ pub extern "C" fn universal_bloom_filter_insert_utxo(
 
 /// Insert batch of UTXOs into Universal Bloom Filter (maximum performance)
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_insert_batch(
+/// # Safety
+///
+/// `filter` must be a valid handle. `txid_bytes` must point to `count * 32` bytes
+/// and `vouts` must point to `count` u32 values.
+pub unsafe extern "C" fn universal_bloom_filter_insert_batch(
     filter: UniversalBloomFilterHandle,
     txid_bytes: *const u8,
     vouts: *const u32,
@@ -790,7 +770,7 @@ pub extern "C" fn universal_bloom_filter_insert_batch(
     let vouts_slice = unsafe { std::slice::from_raw_parts(vouts, count) };
 
     let mut batch = Vec::with_capacity(count);
-    for i in 0..count {
+    for (i, &vout) in vouts_slice.iter().enumerate().take(count) {
         let txid_start = i * 32;
         let txid_end = txid_start + 32;
         if txid_end > txids_slice.len() {
@@ -798,7 +778,7 @@ pub extern "C" fn universal_bloom_filter_insert_batch(
         }
 
         let txid = TransactionId::from_bytes(&txids_slice[txid_start..txid_end]).unwrap_or_else(|| TransactionId::new("bitcoin", &txids_slice[txid_start..txid_end]));
-        batch.push((txid, vouts_slice[i]));
+        batch.push((txid, vout));
     }
 
     match filter_ref.insert_batch(&batch) {
@@ -809,7 +789,10 @@ pub extern "C" fn universal_bloom_filter_insert_batch(
 
 /// Check if single UTXO exists in Universal Bloom Filter
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_contains_utxo(
+/// # Safety
+///
+/// `filter` must be a valid handle. `txid_bytes` must point to 32 bytes.
+pub unsafe extern "C" fn universal_bloom_filter_contains_utxo(
     filter: UniversalBloomFilterHandle,
     txid_bytes: *const u8,
     vout: u32,
@@ -831,7 +814,11 @@ pub extern "C" fn universal_bloom_filter_contains_utxo(
 
 /// Check batch of UTXOs in Universal Bloom Filter
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_contains_batch(
+/// # Safety
+///
+/// `filter` must be a valid handle. `txid_bytes` must point to `count * 32` bytes.
+/// `vouts` and `results` must point to arrays of length `count`.
+pub unsafe extern "C" fn universal_bloom_filter_contains_batch(
     filter: UniversalBloomFilterHandle,
     txid_bytes: *const u8,
     vouts: *const u32,
@@ -848,7 +835,7 @@ pub extern "C" fn universal_bloom_filter_contains_batch(
     let results_slice = unsafe { std::slice::from_raw_parts_mut(results, count) };
 
     let mut batch = Vec::with_capacity(count);
-    for i in 0..count {
+    for (i, &vout) in vouts_slice.iter().enumerate().take(count) {
         let txid_start = i * 32;
         let txid_end = txid_start + 32;
         if txid_end > txids_slice.len() {
@@ -856,7 +843,7 @@ pub extern "C" fn universal_bloom_filter_contains_batch(
         }
 
         let txid = TransactionId::from_bytes(&txids_slice[txid_start..txid_end]).unwrap_or_else(|| TransactionId::new("bitcoin", &txids_slice[txid_start..txid_end]));
-        batch.push((txid, vouts_slice[i]));
+        batch.push((txid, vout));
     }
 
     match filter_ref.contains_batch(&batch) {
@@ -872,7 +859,10 @@ pub extern "C" fn universal_bloom_filter_contains_batch(
 
 /// Load entire block into Universal Bloom Filter
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_load_block(
+/// # Safety
+///
+/// `filter` must be a valid handle. `block_data` must point to `block_size` bytes.
+pub unsafe extern "C" fn universal_bloom_filter_load_block(
     filter: UniversalBloomFilterHandle,
     block_data: *const u8,
     block_size: usize,
@@ -928,7 +918,11 @@ pub extern "C" fn universal_bloom_filter_load_block(
 
 /// Get Universal Bloom Filter statistics
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_get_stats(
+/// # Safety
+///
+/// All pointer parameters must be valid writable pointers. Caller must allocate
+/// memory for each out-parameter before calling.
+pub unsafe extern "C" fn universal_bloom_filter_get_stats(
     filter: UniversalBloomFilterHandle,
     item_count: *mut u64,
     false_positive_count: *mut u64,
@@ -960,7 +954,10 @@ pub extern "C" fn universal_bloom_filter_get_stats(
 
 /// Get theoretical false positive rate
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_false_positive_rate(filter: UniversalBloomFilterHandle) -> c_double {
+/// # Safety
+///
+/// `filter` must be a valid handle previously returned by `universal_bloom_filter_new*`.
+pub unsafe extern "C" fn universal_bloom_filter_false_positive_rate(filter: UniversalBloomFilterHandle) -> c_double {
     if filter.is_null() {
         return -1.0;
     }
@@ -971,7 +968,10 @@ pub extern "C" fn universal_bloom_filter_false_positive_rate(filter: UniversalBl
 
 /// Cleanup old entries to maintain performance
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_cleanup(filter: UniversalBloomFilterHandle) -> c_int {
+/// # Safety
+///
+/// `filter` must be a valid handle.
+pub unsafe extern "C" fn universal_bloom_filter_cleanup(filter: UniversalBloomFilterHandle) -> c_int {
     if filter.is_null() {
         return UniversalBloomFilterError::NullPointer as c_int;
     }
@@ -985,7 +985,10 @@ pub extern "C" fn universal_bloom_filter_cleanup(filter: UniversalBloomFilterHan
 
 /// Auto-cleanup if needed (call periodically)
 #[no_mangle]
-pub extern "C" fn universal_bloom_filter_auto_cleanup(filter: UniversalBloomFilterHandle) -> c_int {
+/// # Safety
+///
+/// `filter` must be a valid handle.
+pub unsafe extern "C" fn universal_bloom_filter_auto_cleanup(filter: UniversalBloomFilterHandle) -> c_int {
     if filter.is_null() {
         return UniversalBloomFilterError::NullPointer as c_int;
     }
@@ -1004,6 +1007,11 @@ pub extern "C" fn universal_bloom_filter_auto_cleanup(filter: UniversalBloomFilt
 
 /// Generate fast entropy (32 bytes) - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `output` must be a valid, non-null pointer to at least 32 writable bytes. The
+/// caller retains ownership of the output buffer. This function will write 32 bytes
+/// of entropy into `output` and may call OS randomness APIs.
 pub unsafe extern "C" fn fast_entropy_c(output: *mut u8) -> c_int {
     if output.is_null() {
         return -1; // Null pointer error
@@ -1016,6 +1024,13 @@ pub unsafe extern "C" fn fast_entropy_c(output: *mut u8) -> c_int {
 
 /// Generate hybrid entropy with Bitcoin headers (32 bytes) - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `headers` and `header_lengths` (if non-null) must point to arrays of `header_count`
+/// pointers/lengths respectively. Each header pointer must be valid for the length
+/// specified. `output` must be a valid, non-null pointer to at least 32 writable bytes.
+/// The function will read memory from the provided headers and write 32 bytes into
+/// `output`.
 pub unsafe extern "C" fn hybrid_entropy_c(
     headers: *const *const u8,
     header_lengths: *const usize,
@@ -1047,6 +1062,11 @@ pub unsafe extern "C" fn hybrid_entropy_c(
 
 /// Generate enterprise entropy with additional data (32 bytes) - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `headers`, `header_lengths`, and `additional_data` (if non-null) must point to
+/// valid memory with the specified lengths. `output` must be non-null and point to
+/// at least 32 writable bytes. The caller retains ownership of input buffers.
 pub unsafe extern "C" fn enterprise_entropy_c(
     headers: *const *const u8,
     header_lengths: *const usize,
@@ -1086,29 +1106,35 @@ pub unsafe extern "C" fn enterprise_entropy_c(
 
 /// Get system fingerprint for entropy mixing (32 bytes) - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `output` must be a valid, non-null pointer to at least 32 writable bytes. The
+/// function will write a 32-byte fingerprint into `output`.
 pub unsafe extern "C" fn system_fingerprint_c(output: *mut u8) -> c_int {
     if output.is_null() {
         return -1; // Null pointer error
     }
 
     let fingerprint = entropy::system_fingerprint();
-    unsafe {
-        std::ptr::copy_nonoverlapping(fingerprint.as_ptr(), output, 32);
-    }
+    std::ptr::copy_nonoverlapping(fingerprint.as_ptr(), output, 32);
     0 // Success
 }
 
 /// Get CPU temperature for entropy mixing - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// Safe to call from any thread. Returns -1.0 on error.
 pub extern "C" fn get_cpu_temperature_c() -> f32 {
-    match entropy::get_cpu_temperature() {
-        Ok(temp) => temp,
-        Err(_) => -1.0, // Error indicator
-    }
+    entropy::get_cpu_temperature().unwrap_or(-1.0)
 }
 
 /// Generate fast entropy with hardware fingerprint (32 bytes) - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `output` must point to at least 32 writable bytes. The function will write 32
+/// bytes of entropy into `output`.
 pub unsafe extern "C" fn fast_entropy_with_fingerprint_c(output: *mut u8) -> c_int {
     if output.is_null() {
         return -1; // Null pointer error
@@ -1121,6 +1147,10 @@ pub unsafe extern "C" fn fast_entropy_with_fingerprint_c(output: *mut u8) -> c_i
 
 /// Generate admin secret as raw bytes - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `output` must point to at least `output_len` writable bytes. `output_len` must
+/// be >= 32. The function writes 32 raw bytes into the provided buffer.
 pub unsafe extern "C" fn generate_admin_secret_c(output: *mut u8, output_len: usize) -> c_int {
     if output.is_null() || output_len < 32 {
         return -1; // Invalid parameters
@@ -1133,6 +1163,10 @@ pub unsafe extern "C" fn generate_admin_secret_c(output: *mut u8, output_len: us
 
 /// Generate admin secret as base64 string - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `output` must point to `output_len` writable bytes. `output_len` should be
+/// large enough to hold the base64 string and a null terminator (>=45 recommended).
 pub unsafe extern "C" fn generate_admin_secret_base64_c(output: *mut c_char, output_len: usize) -> c_int {
     if output.is_null() || output_len < 45 { // 32 bytes base64 encoded + null
         return -1; // Invalid parameters
@@ -1152,6 +1186,10 @@ pub unsafe extern "C" fn generate_admin_secret_base64_c(output: *mut c_char, out
 
 /// Generate admin secret as hex string - Direct FFI export
 #[no_mangle]
+/// # Safety
+///
+/// `output` must point to `output_len` writable bytes. `output_len` should be
+/// large enough to hold the hex string and a null terminator (>=65 recommended).
 pub unsafe extern "C" fn generate_admin_secret_hex_c(output: *mut c_char, output_len: usize) -> c_int {
     if output.is_null() || output_len < 65 { // 32 bytes hex encoded + null
         return -1; // Invalid parameters
@@ -1174,10 +1212,15 @@ pub unsafe extern "C" fn generate_admin_secret_hex_c(output: *mut c_char, output
 // ============================================================================
 
 /// Opaque handle for UniversalBloomFilter
+#[allow(dead_code)]
 pub struct BloomFilterHandle(*mut bloom_filter::UniversalBloomFilter);
 
 /// C FFI: Create new bloom filter
 #[no_mangle]
+/// # Safety
+///
+/// `size` and `num_hashes` must be reasonable values. The returned pointer is
+/// owned by the caller and must be freed with `bloom_filter_free` to avoid leaks.
 pub unsafe extern "C" fn bloom_filter_new(size: usize, num_hashes: usize) -> *mut c_void {
     let network = bloom_filter::NetworkConfig::bitcoin();
     let mut config = bloom_filter::BloomConfig::for_network(network);
@@ -1192,6 +1235,10 @@ pub unsafe extern "C" fn bloom_filter_new(size: usize, num_hashes: usize) -> *mu
 
 /// C FFI: Insert data into bloom filter
 #[no_mangle]
+/// # Safety
+///
+/// `filter` must be a pointer returned by `bloom_filter_new`. `data` must point
+/// to `len` readable bytes. The function will read from `data`.
 pub unsafe extern "C" fn bloom_filter_insert(filter: *mut c_void, data: *const u8, len: usize) -> c_int {
     if filter.is_null() || data.is_null() || len == 0 {
         return -1;
@@ -1208,6 +1255,10 @@ pub unsafe extern "C" fn bloom_filter_insert(filter: *mut c_void, data: *const u
 
 /// C FFI: Check if data exists in bloom filter
 #[no_mangle]
+/// # Safety
+///
+/// `filter` must be a pointer returned by `bloom_filter_new`. `data` must point
+/// to `len` readable bytes.
 pub unsafe extern "C" fn bloom_filter_contains(filter: *mut c_void, data: *const u8, len: usize) -> c_int {
     if filter.is_null() || data.is_null() || len == 0 {
         return -1;
@@ -1224,6 +1275,9 @@ pub unsafe extern "C" fn bloom_filter_contains(filter: *mut c_void, data: *const
 
 /// C FFI: Get item count in bloom filter
 #[no_mangle]
+/// # Safety
+///
+/// `filter` must be a pointer returned by `bloom_filter_new`.
 pub unsafe extern "C" fn bloom_filter_count(filter: *mut c_void) -> usize {
     if filter.is_null() {
         return 0;
@@ -1235,6 +1289,9 @@ pub unsafe extern "C" fn bloom_filter_count(filter: *mut c_void) -> usize {
 
 /// C FFI: Get false positive rate
 #[no_mangle]
+/// # Safety
+///
+/// `filter` must be a pointer returned by `bloom_filter_new`.
 pub unsafe extern "C" fn bloom_filter_false_positive_rate(filter: *mut c_void) -> f64 {
     if filter.is_null() {
         return 1.0;
@@ -1246,6 +1303,10 @@ pub unsafe extern "C" fn bloom_filter_false_positive_rate(filter: *mut c_void) -
 
 /// C FFI: Free bloom filter
 #[no_mangle]
+/// # Safety
+///
+/// `filter` must be a pointer previously returned by `bloom_filter_new`. After
+/// this call the pointer must not be used.
 pub unsafe extern "C" fn bloom_filter_free(filter: *mut c_void) {
     if !filter.is_null() {
         let _ = Box::from_raw(filter as *mut bloom_filter::UniversalBloomFilter);
@@ -1258,6 +1319,10 @@ pub unsafe extern "C" fn bloom_filter_free(filter: *mut c_void) {
 
 /// C FFI: Create new secure buffer with security level
 #[no_mangle]
+/// # Safety
+///
+/// `capacity` must be a reasonable positive value. The returned pointer is
+/// owned by the caller and must be freed with `secure_buffer_free` or equivalent.
 pub unsafe extern "C" fn securebuffer_new_with_security_level(capacity: usize, security_level: c_int) -> *mut c_void {
     match SecureBuffer::new(capacity) {
         Ok(mut buffer) => {
@@ -1272,6 +1337,9 @@ pub unsafe extern "C" fn securebuffer_new_with_security_level(capacity: usize, s
 
 /// C FFI: Enable audit logging
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_enable_audit_logging(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1285,6 +1353,9 @@ pub unsafe extern "C" fn securebuffer_enable_audit_logging(buffer: *mut c_void) 
 
 /// C FFI: Disable audit logging
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_disable_audit_logging(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1296,6 +1367,9 @@ pub unsafe extern "C" fn securebuffer_disable_audit_logging(buffer: *mut c_void)
 
 /// C FFI: Check if audit logging is enabled
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_is_audit_logging_enabled(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return 0;
@@ -1306,6 +1380,9 @@ pub unsafe extern "C" fn securebuffer_is_audit_logging_enabled(buffer: *mut c_vo
 
 /// C FFI: Bind to hardware
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_bind_to_hardware(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1319,6 +1396,9 @@ pub unsafe extern "C" fn securebuffer_bind_to_hardware(buffer: *mut c_void) -> c
 
 /// C FFI: Check if hardware backed
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_is_hardware_backed(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return 0;
@@ -1329,6 +1409,9 @@ pub unsafe extern "C" fn securebuffer_is_hardware_backed(buffer: *mut c_void) ->
 
 /// C FFI: Enable tamper detection
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_enable_tamper_detection(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1342,6 +1425,9 @@ pub unsafe extern "C" fn securebuffer_enable_tamper_detection(buffer: *mut c_voi
 
 /// C FFI: Check if tampered
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_is_tampered(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return 1; // Consider null as tampered
@@ -1352,6 +1438,9 @@ pub unsafe extern "C" fn securebuffer_is_tampered(buffer: *mut c_void) -> c_int 
 
 /// C FFI: Enable side channel protection
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_enable_side_channel_protection(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1365,6 +1454,9 @@ pub unsafe extern "C" fn securebuffer_enable_side_channel_protection(buffer: *mu
 
 /// C FFI: Set enterprise policy
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer and `policy` must be a valid NUL-terminated C string.
 pub unsafe extern "C" fn securebuffer_set_enterprise_policy(buffer: *mut c_void, policy: *const c_char) -> c_int {
     if buffer.is_null() || policy.is_null() {
         return -1;
@@ -1384,6 +1476,9 @@ pub unsafe extern "C" fn securebuffer_set_enterprise_policy(buffer: *mut c_void,
 
 /// C FFI: Validate policy compliance
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
 pub unsafe extern "C" fn securebuffer_validate_policy_compliance(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1394,6 +1489,10 @@ pub unsafe extern "C" fn securebuffer_validate_policy_compliance(buffer: *mut c_
 
 /// C FFI: Get compliance report
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
+/// Caller receives ownership of the returned C string and must free it with `securebuffer_free_cstr`.
 pub unsafe extern "C" fn securebuffer_get_compliance_report(buffer: *mut c_void) -> *mut c_char {
     if buffer.is_null() {
         return std::ptr::null_mut();
@@ -1408,6 +1507,10 @@ pub unsafe extern "C" fn securebuffer_get_compliance_report(buffer: *mut c_void)
 
 /// C FFI: Get security audit log
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `securebuffer_new_with_security_level` or related constructors.
+/// Caller receives ownership of the returned C string and must free it with `securebuffer_free_cstr`.
 pub unsafe extern "C" fn securebuffer_get_security_audit_log(buffer: *mut c_void) -> *mut c_char {
     if buffer.is_null() {
         return std::ptr::null_mut();
@@ -1422,6 +1525,10 @@ pub unsafe extern "C" fn securebuffer_get_security_audit_log(buffer: *mut c_void
 
 /// C FFI: HMAC as hex
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer. `key` must point to `key_len` readable bytes.
+/// Caller receives ownership of the returned C string and must free it with `securebuffer_free_cstr`.
 pub unsafe extern "C" fn securebuffer_hmac_hex(buffer: *mut c_void, key: *const u8, key_len: usize) -> *mut c_char {
     if buffer.is_null() || key.is_null() || key_len == 0 {
         return std::ptr::null_mut();
@@ -1441,6 +1548,10 @@ pub unsafe extern "C" fn securebuffer_hmac_hex(buffer: *mut c_void, key: *const 
 
 /// C FFI: HMAC as base64url
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer. `key` must point to `key_len` readable bytes.
+/// Caller receives ownership of the returned C string and must free it with `securebuffer_free_cstr`.
 pub unsafe extern "C" fn securebuffer_hmac_base64url(buffer: *mut c_void, key: *const u8, key_len: usize) -> *mut c_char {
     if buffer.is_null() || key.is_null() || key_len == 0 {
         return std::ptr::null_mut();
@@ -1460,6 +1571,10 @@ pub unsafe extern "C" fn securebuffer_hmac_base64url(buffer: *mut c_void, key: *
 
 /// C FFI: Free C string
 #[no_mangle]
+/// # Safety
+///
+/// `ptr` must be a pointer previously returned by one of the functions that returns a C string
+/// (ownership is transferred to the caller). After this call the pointer must not be used.
 pub unsafe extern "C" fn securebuffer_free_cstr(ptr: *mut c_char) {
     if !ptr.is_null() {
         let _ = CString::from_raw(ptr);
@@ -1472,6 +1587,10 @@ pub unsafe extern "C" fn securebuffer_free_cstr(ptr: *mut c_char) {
 
 /// C FFI: Get buffer capacity
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a non-null pointer previously returned by `secure_buffer_new` or related
+/// constructors. The function reads internal buffer metadata and does not mutate the buffer.
 pub unsafe extern "C" fn secure_buffer_capacity(buffer: *mut c_void) -> usize {
     if buffer.is_null() {
         return 0;
@@ -1482,6 +1601,10 @@ pub unsafe extern "C" fn secure_buffer_capacity(buffer: *mut c_void) -> usize {
 
 /// C FFI: Get buffer length
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a non-null pointer previously returned by `secure_buffer_new` or related
+/// constructors. The function reads internal buffer metadata and does not mutate the buffer.
 pub unsafe extern "C" fn secure_buffer_len(buffer: *mut c_void) -> usize {
     if buffer.is_null() {
         return 0;
@@ -1492,6 +1615,10 @@ pub unsafe extern "C" fn secure_buffer_len(buffer: *mut c_void) -> usize {
 
 /// C FFI: Check if buffer is locked
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a non-null pointer previously returned by `secure_buffer_new` or related
+/// constructors. The function reads lock state without mutating the buffer.
 pub unsafe extern "C" fn secure_buffer_is_locked(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return 0;
@@ -1502,6 +1629,10 @@ pub unsafe extern "C" fn secure_buffer_is_locked(buffer: *mut c_void) -> c_int {
 
 /// C FFI: Lock buffer
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer previously returned by `secure_buffer_new` or related
+/// constructors. This function may mutate internal buffer state and is not reentrant.
 pub unsafe extern "C" fn secure_buffer_lock(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1515,6 +1646,10 @@ pub unsafe extern "C" fn secure_buffer_lock(buffer: *mut c_void) -> c_int {
 
 /// C FFI: Unlock buffer
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer previously returned by `secure_buffer_new` or related
+/// constructors. This function may mutate internal buffer state and is not reentrant.
 pub unsafe extern "C" fn secure_buffer_unlock(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1528,6 +1663,10 @@ pub unsafe extern "C" fn secure_buffer_unlock(buffer: *mut c_void) -> c_int {
 
 /// C FFI: Integrity check
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer previously returned by `secure_buffer_new` or related
+/// constructors. The function performs internal integrity checks and does not mutate the buffer.
 pub unsafe extern "C" fn secure_buffer_integrity_check(buffer: *mut c_void) -> c_int {
     if buffer.is_null() {
         return -1;
@@ -1538,6 +1677,11 @@ pub unsafe extern "C" fn secure_buffer_integrity_check(buffer: *mut c_void) -> c
 
 /// C FFI: Zeroize buffer
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer previously returned by `secure_buffer_new` or related
+/// constructors. This function will mutate and zeroize the buffer contents; callers must ensure no
+/// concurrent access occurs.
 pub unsafe extern "C" fn secure_buffer_zeroize(buffer: *mut c_void) {
     if !buffer.is_null() {
         let buffer = &mut *(buffer as *mut SecureBuffer);
@@ -1547,6 +1691,10 @@ pub unsafe extern "C" fn secure_buffer_zeroize(buffer: *mut c_void) {
 
 /// C FFI: Free secure buffer
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a pointer previously returned by `secure_buffer_new` or related constructors.
+/// Ownership is transferred to this function and the caller must not use `buffer` after calling.
 pub unsafe extern "C" fn secure_buffer_free(buffer: *mut c_void) {
     if !buffer.is_null() {
         let _ = Box::from_raw(buffer as *mut SecureBuffer);

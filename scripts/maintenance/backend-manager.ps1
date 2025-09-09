@@ -20,8 +20,8 @@ param (
     [switch]$Optimized
 )
 
-$BackendProcess = "bitcoin-sprint-backend"
-$BackendBinary = ".\$BackendProcess.exe"
+$BackendProcess = "bitcoin-sprint"
+$BackendBinary = ".\$BackendProcess.exe"  # canonical binary name used in README/docs
 
 function Get-BackendStatus {
     $processes = Get-Process -Name $BackendProcess -ErrorAction SilentlyContinue
@@ -68,13 +68,31 @@ function Start-Backend {
         Write-Host "Building optimized backend binary..." -ForegroundColor Yellow
         
         $buildFlags = "-ldflags=`"-s -w -extldflags=-static`" -trimpath"
-        $buildTags = "cgo"
-        
-        if ($NoZMQ) {
-            $buildTags += " nozmq"
+        # Detect CGO support: prefer explicit env var, otherwise query `go env`.
+        $cgoEnv = $env:CGO_ENABLED
+        if ([string]::IsNullOrEmpty($cgoEnv)) {
+            try {
+                $cgoEnv = (& go env CGO_ENABLED).Trim()
+            } catch {
+                $cgoEnv = '0'
+            }
         }
-        
-        $buildCmd = "go build $buildFlags -tags `"$buildTags`" -o $BackendBinary ./cmd/sprintd"
+
+        # Default: include CGO tag only when CGO is enabled and Rust artifacts exist
+        $buildTags = @()
+        $rustLibPath = Join-Path (Get-Location) "secure\rust\target\x86_64-pc-windows-gnu\release"
+        if ($cgoEnv -ne '0' -and (Test-Path $rustLibPath)) {
+            $buildTags += 'cgo'
+        } else {
+            Write-Host "CGO not enabled or Rust artifacts missing — building Go-only fallbacks" -ForegroundColor Yellow
+        }
+
+        if ($NoZMQ) { $buildTags += 'nozmq' }
+
+        $tagsArg = ''
+        if ($buildTags.Count -gt 0) { $tagsArg = "-tags \"$(($buildTags -join ' '))\"" }
+
+        $buildCmd = "go build $buildFlags $tagsArg -o $BackendBinary ./cmd/sprintd"
         Write-Host "Running: $buildCmd" -ForegroundColor Gray
         Invoke-Expression $buildCmd
         

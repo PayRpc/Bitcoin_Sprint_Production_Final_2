@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Bitcoin Sprint - Cryptographically Secure Entropy Module
 
-use std::time::Instant;
 use std::sync::atomic::{AtomicU64, Ordering};
-use rand::{RngCore, Rng};
+use rand::RngCore;
 use rand::rngs::OsRng;
 #[cfg(target_family = "unix")]
 use libc;
@@ -463,7 +462,12 @@ mod tests {
 // FFI bindings for Go integration
 
 #[no_mangle]
-pub extern "C" fn fast_entropy_ffi(output: *mut u8, len: usize) -> i32 {
+/// # Safety
+///
+/// `output` must be a valid, non-null pointer to at least `len` writable bytes.
+/// `len` must be exactly 32 for this function. The caller retains ownership of
+/// the output buffer.
+pub unsafe extern "C" fn fast_entropy_ffi(output: *mut u8, len: usize) -> i32 {
     if output.is_null() || len != 32 {
         return -1;
     }
@@ -476,8 +480,12 @@ pub extern "C" fn fast_entropy_ffi(output: *mut u8, len: usize) -> i32 {
     0
 }
 
-#[no_mangle]
-pub extern "C" fn hybrid_entropy_ffi(headers_ptr: *const *const u8, headers_len: usize, header_sizes_ptr: *const usize, output: *mut u8, len: usize) -> i32 {
+/// # Safety
+///
+/// `headers_ptr` and `header_sizes_ptr` (if non-null) must point to arrays with
+/// `headers_len` elements. Each header pointer must be valid for the corresponding
+/// size. `output` must be a valid, non-null pointer to exactly 32 writable bytes.
+pub unsafe extern "C" fn hybrid_entropy_ffi(headers_ptr: *const *const u8, headers_len: usize, header_sizes_ptr: *const usize, output: *mut u8, len: usize) -> i32 {
     if output.is_null() || len != 32 {
         return -1;
     }
@@ -502,8 +510,10 @@ pub extern "C" fn hybrid_entropy_ffi(headers_ptr: *const *const u8, headers_len:
     0
 }
 
-#[no_mangle]
-pub extern "C" fn system_fingerprint_ffi(output: *mut u8, len: usize) -> i32 {
+/// # Safety
+///
+/// `output` must be a valid, non-null pointer to exactly 32 writable bytes.
+pub unsafe extern "C" fn system_fingerprint_ffi(output: *mut u8, len: usize) -> i32 {
     if output.is_null() || len != 32 {
         return -1;
     }
@@ -516,7 +526,9 @@ pub extern "C" fn system_fingerprint_ffi(output: *mut u8, len: usize) -> i32 {
     0
 }
 
-#[no_mangle]
+/// # Safety
+///
+/// Safe to call from any thread. Returns -1.0 on error.
 pub extern "C" fn get_cpu_temperature_ffi() -> f32 {
     match get_cpu_temperature() {
         Ok(temp) => temp,
@@ -524,8 +536,10 @@ pub extern "C" fn get_cpu_temperature_ffi() -> f32 {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn fast_entropy_with_fingerprint_ffi(output: *mut u8, len: usize) -> i32 {
+/// # Safety
+///
+/// `output` must be a valid, non-null pointer to exactly 32 writable bytes.
+pub unsafe extern "C" fn fast_entropy_with_fingerprint_ffi(output: *mut u8, len: usize) -> i32 {
     if output.is_null() || len != 32 {
         return -1;
     }
@@ -538,8 +552,12 @@ pub extern "C" fn fast_entropy_with_fingerprint_ffi(output: *mut u8, len: usize)
     0
 }
 
-#[no_mangle]
-pub extern "C" fn hybrid_entropy_with_fingerprint_ffi(headers_ptr: *const *const u8, headers_len: usize, header_sizes_ptr: *const usize, output: *mut u8, len: usize) -> i32 {
+/// # Safety
+///
+/// `headers_ptr` and `header_sizes_ptr` (if non-null) must point to arrays with
+/// `headers_len` elements. Each header pointer must be valid for the corresponding
+/// size. `output` must be a valid, non-null pointer to exactly 32 writable bytes.
+pub unsafe extern "C" fn hybrid_entropy_with_fingerprint_ffi(headers_ptr: *const *const u8, headers_len: usize, header_sizes_ptr: *const usize, output: *mut u8, len: usize) -> i32 {
     if output.is_null() || len != 32 {
         return -1;
     }

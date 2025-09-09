@@ -4,16 +4,17 @@
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH, Duration};
+use std::time::{SystemTime, UNIX_EPOCH};
 use sha2::{Sha256, Digest};
 use rand::{thread_rng, RngCore, Rng};
 
 #[cfg(feature = "ipfs")]
 use reqwest::Client;
 
-use thiserror::Error;
-use tokio::sync::RwLock;
-use log::{info, warn, error, debug};
+// NOTE: logging and async locks currently not used in this module; keep commented imports
+// use thiserror::Error;
+// use tokio::sync::RwLock;
+// use log::{info, warn, error, debug};
 use hex;
 
 /// Commitment algorithms for file verification
@@ -516,10 +517,8 @@ impl StorageVerifier {
 
         // Optional: Verify Merkle proof if provided and algorithm supports it
         if let Some(ref merkle_proof) = proof.merkle_proof {
-            if challenge.commitment_alg == "merkle_sha256" {
-                if !self.verify_merkle_proof(merkle_proof, &proof.proof_data, &challenge.file_id).await? {
-                    return Ok(false);
-                }
+            if challenge.commitment_alg == "merkle_sha256" && !self.verify_merkle_proof(merkle_proof, &proof.proof_data, &challenge.file_id).await? {
+                return Ok(false);
             }
         }
 
@@ -633,8 +632,8 @@ impl StorageVerifier {
             // Hash current with sibling (order depends on tree structure)
             // For simplicity, we'll assume left-to-right ordering
             let mut combined_hasher = Sha256::new();
-            combined_hasher.update(&current_hash);
-            combined_hasher.update(&sibling_hash);
+            combined_hasher.update(current_hash);
+            combined_hasher.update(sibling_hash);
             current_hash = combined_hasher.finalize().into();
         }
 
@@ -1015,9 +1014,10 @@ mod tests {
         };
 
         // This should now succeed because we have the correct proof data
-        let result = verifier.verify_proof(proof).await;
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), true);
+        match verifier.verify_proof(proof).await {
+            Ok(v) => assert_eq!(v, true),
+            Err(e) => panic!("verify_proof returned error: {:?}", e),
+        }
     }
 
     #[tokio::test]

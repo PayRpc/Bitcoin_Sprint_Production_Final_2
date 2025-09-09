@@ -152,11 +152,15 @@ impl Default for BloomConfig {
 impl BloomConfig {
     /// Create configuration optimized for a specific network
     pub fn for_network(network: NetworkConfig) -> Self {
+        // Use power-of-two sizes to satisfy internal validation and improve alignment
         let size = match network.name.as_str() {
-            "bitcoin" => 36_000,      // Bitcoin Core default
-            "ethereum" => 50_000,     // Larger for Ethereum's higher TPS
-            "solana" => 100_000,      // Very large for Solana's ultra-high TPS
-            _ => 36_000,              // Default size
+            // 32768 bits (~4KB of buckets) - reasonable default for bitcoin workloads
+            "bitcoin" => 32_768,
+            // 65536 bits for larger networks like Ethereum
+            "ethereum" => 65_536,
+            // 131072 bits for ultra-high throughput networks like Solana
+            "solana" => 131_072,
+            _ => 32_768,
         };
 
         let batch_size = match network.name.as_str() {
@@ -182,7 +186,8 @@ impl BloomConfig {
     /// Create high-performance configuration for maximum throughput
     pub fn high_performance(network: NetworkConfig) -> Self {
         let mut config = Self::for_network(network);
-        config.size = 100_000;        // Larger filter for better accuracy
+    // Use nearest power-of-two for high performance configuration
+    config.size = 131_072;        // Larger filter for better accuracy
         config.num_hashes = 7;        // More hash functions for better distribution
         config.batch_size = 8192;     // Larger batches for better parallelism
         config.enable_compression = true;
@@ -193,7 +198,8 @@ impl BloomConfig {
     /// Create memory-optimized configuration for resource-constrained environments
     pub fn memory_optimized(network: NetworkConfig) -> Self {
         let mut config = Self::for_network(network);
-        config.size = 18_000;        // Smaller filter
+    // Use a smaller power-of-two size for constrained environments
+    config.size = 16_384;        // Smaller filter
         config.num_hashes = 3;       // Fewer hash functions
         config.batch_size = 512;     // Smaller batches
         config.enable_compression = true;
@@ -214,6 +220,7 @@ pub struct UniversalBloomFilter {
     false_positive_count: AtomicU64,
     last_cleanup: AtomicU64,
     entropy_pool: Vec<u8>, // Additional entropy for seeding
+    #[allow(dead_code)]
     network_stats: Arc<DashMap<String, NetworkStats>>, // Per-network statistics
 }
 
@@ -246,7 +253,8 @@ impl UniversalBloomFilter {
             return Err(BloomFilterError::InvalidConfiguration("Size must be between 1024 and 1M bits".into()));
         }
 
-        let bucket_count = (cfg.size + 63) / 64;
+    #[allow(clippy::manual_div_ceil)]
+    let bucket_count = (cfg.size + 63) / 64;
         let mut hash_seeds = [0u32; 8];
 
         // Cryptographically secure seed generation with additional entropy
@@ -281,8 +289,8 @@ impl UniversalBloomFilter {
 
     /// Insert a single UTXO with maximum performance optimization
     pub fn insert_utxo(&self, txid: &TransactionId, vout: u32) -> Result<(), BloomFilterError> {
-        let mut preimage = Vec::with_capacity(36);
-        preimage.extend_from_slice(&txid.as_bytes()[..]);
+    let mut preimage = Vec::with_capacity(36);
+    preimage.extend_from_slice(txid.as_bytes());
         preimage.extend_from_slice(&vout.to_le_bytes());
         self.insert(&preimage)
     }
@@ -302,7 +310,7 @@ impl UniversalBloomFilter {
         batch.par_chunks(self.config.batch_size).for_each(|chunk| {
             chunk.iter().for_each(|(txid, vout)| {
                 let mut preimage = Vec::with_capacity(36);
-                preimage.extend_from_slice(&txid.as_bytes()[..]);
+                preimage.extend_from_slice(txid.as_bytes());
                 preimage.extend_from_slice(&vout.to_le_bytes());
                 let _ = self.insert_with_timestamp(&preimage, now);
             });
@@ -347,7 +355,7 @@ impl UniversalBloomFilter {
     /// Check if a single UTXO is present with false positive tracking
     pub fn contains_utxo(&self, txid: &TransactionId, vout: u32) -> Result<bool, BloomFilterError> {
         let mut preimage = Vec::with_capacity(36);
-        preimage.extend_from_slice(&txid.as_bytes()[..]);
+                preimage.extend_from_slice(txid.as_bytes());
         preimage.extend_from_slice(&vout.to_le_bytes());
         self.contains(&preimage)
     }
@@ -657,7 +665,10 @@ mod tests {
 
         // Insert some items
         for i in 0u32..1000 {
-            let txid = TransactionId::from_bytes(&i.to_le_bytes()).unwrap();
+            // Build a 32-byte txid where the first 4 bytes encode the index
+            let mut bytes = [0u8; 32];
+            bytes[0..4].copy_from_slice(&i.to_le_bytes());
+            let txid = TransactionId::from_bytes(&bytes).unwrap();
             filter.insert_utxo(&txid, 0).unwrap();
         }
 

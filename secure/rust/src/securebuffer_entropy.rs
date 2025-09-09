@@ -39,8 +39,9 @@ impl SecureBuffer {
     pub fn new_with_fast_entropy(capacity: usize) -> Result<Self, String> {
         let mut buffer = Self::new(capacity)?;
         
-        // Fill with entropy up to buffer capacity
-        let chunks = (capacity + 31) / 32; // Round up to cover full capacity
+    // Fill with entropy up to buffer capacity
+    #[allow(clippy::manual_div_ceil)]
+    let chunks = (capacity + 31) / 32; // Round up to cover full capacity
         let mut offset = 0;
         
         for _ in 0..chunks {
@@ -78,11 +79,13 @@ impl SecureBuffer {
     pub fn new_with_hybrid_entropy(capacity: usize, headers: &[Vec<u8>]) -> Result<Self, String> {
         let mut buffer = Self::new(capacity)?;
         
-        // Fill with hybrid entropy up to buffer capacity
-        let chunks = (capacity + 31) / 32;
+    // Fill with hybrid entropy up to buffer capacity
+    #[allow(clippy::manual_div_ceil)]
+    let chunks = (capacity + 31) / 32;
         let mut offset = 0;
         
-        for _ in 0..chunks {
+    #[allow(clippy::needless_range_loop)]
+    for _ in 0..chunks {
             let entropy_chunk = entropy::hybrid_entropy(headers);
             let remaining = capacity - offset;
             let write_len = std::cmp::min(32, remaining);
@@ -160,6 +163,12 @@ impl SecureBuffer {
 
 // FFI exports for Go integration
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer to a `CSecureBuffer` previously
+/// returned by one of the `securebuffer_*` constructors. The function will dereference
+/// the pointer and mutate the underlying buffer. The caller must ensure exclusive
+/// access if called from multiple threads.
 pub unsafe extern "C" fn securebuffer_fill_fast_entropy(buffer: *mut CSecureBuffer) -> i32 {
     if buffer.is_null() {
         return -1;
@@ -177,6 +186,14 @@ pub unsafe extern "C" fn securebuffer_fill_fast_entropy(buffer: *mut CSecureBuff
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer to a `CSecureBuffer` previously
+/// returned by one of the `securebuffer_*` constructors. `headers_ptr` (if non-null)
+/// must point to a contiguous memory region containing `headers_len` bytes split into
+/// `header_count` headers; callers must ensure these pointers and lengths are correct.
+/// The function will read from raw pointers and may allocate; caller must ensure
+/// memory validity for the duration of the call.
 pub unsafe extern "C" fn securebuffer_fill_hybrid_entropy(
     buffer: *mut CSecureBuffer,
     headers_ptr: *const u8,
@@ -217,6 +234,12 @@ pub unsafe extern "C" fn securebuffer_fill_hybrid_entropy(
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer to a `CSecureBuffer`.
+/// `headers_ptr` and `additional_data_ptr` (if non-null) must point to valid memory
+/// regions described by their respective length parameters. All pointers must remain
+/// valid for the duration of the call. The caller retains ownership of the input data.
 pub unsafe extern "C" fn securebuffer_fill_enterprise_entropy(
     buffer: *mut CSecureBuffer,
     headers_ptr: *const u8,
@@ -267,6 +290,10 @@ pub unsafe extern "C" fn securebuffer_fill_enterprise_entropy(
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// The returned pointer must be freed by calling `securebuffer_free` (or the
+/// appropriate destructor). `capacity` must be a sane positive value.
 pub unsafe extern "C" fn securebuffer_new_with_fast_entropy(capacity: usize) -> *mut CSecureBuffer {
     match SecureBuffer::new_with_fast_entropy(capacity) {
         Ok(buffer) => {
@@ -280,6 +307,11 @@ pub unsafe extern "C" fn securebuffer_new_with_fast_entropy(capacity: usize) -> 
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `headers_ptr` (if non-null) must point to a memory region of `headers_len` bytes
+/// split into `header_count` headers; callers must ensure memory is valid for the
+/// duration of this call. The returned pointer must be freed by the caller.
 pub unsafe extern "C" fn securebuffer_new_with_hybrid_entropy(
     capacity: usize,
     headers_ptr: *const u8,
@@ -316,6 +348,10 @@ pub unsafe extern "C" fn securebuffer_new_with_hybrid_entropy(
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null pointer to a `CSecureBuffer` previously
+/// returned by one of the constructors. The function may mutate the buffer contents.
 pub unsafe extern "C" fn securebuffer_refresh_entropy(buffer: *mut CSecureBuffer) -> i32 {
     if buffer.is_null() {
         return -1;
@@ -333,6 +369,11 @@ pub unsafe extern "C" fn securebuffer_refresh_entropy(buffer: *mut CSecureBuffer
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid, non-null `CSecureBuffer` pointer. `headers_ptr` (if
+/// non-null) must point to valid header data as described by `headers_len` and
+/// `header_count`. The function will read from these pointers and mutate the buffer.
 pub unsafe extern "C" fn securebuffer_mix_entropy(
     buffer: *mut CSecureBuffer,
     headers_ptr: *const u8,

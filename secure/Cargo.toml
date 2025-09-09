@@ -1,0 +1,15 @@
+[workspace]
+members = [
+	"rust"
+]
+
+# Explicitly set dependency resolver to 2 to match edition 2021 workspace members
+resolver = "2"
+
+# Workspace-level profile (moved from rust/Cargo.toml to avoid non-root profile warnings)
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+opt-level = 3
+strip = true

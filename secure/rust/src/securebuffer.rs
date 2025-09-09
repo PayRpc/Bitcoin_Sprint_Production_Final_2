@@ -16,7 +16,7 @@ mod memory {
     use std::io;
 
     #[cfg(unix)]
-    pub fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if libc::mlock(ptr as *mut libc::c_void, len) == 0 {
                 Ok(())
@@ -27,7 +27,7 @@ mod memory {
     }
 
     #[cfg(unix)]
-    pub fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if libc::munlock(ptr as *mut libc::c_void, len) == 0 {
                 Ok(())
@@ -38,7 +38,7 @@ mod memory {
     }
 
     #[cfg(unix)]
-    pub fn explicit_bzero(ptr: *mut u8, len: usize) {
+    pub unsafe fn explicit_bzero(ptr: *mut u8, len: usize) {
         unsafe {
             // Use explicit_bzero if available, fallback to volatile writes
             #[cfg(target_os = "linux")]
@@ -59,7 +59,7 @@ mod memory {
     }
 
     #[cfg(windows)]
-    pub fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn lock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if winapi::um::memoryapi::VirtualLock(ptr as *mut _, len) != 0 {
                 Ok(())
@@ -70,7 +70,7 @@ mod memory {
     }
 
     #[cfg(windows)]
-    pub fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
+    pub unsafe fn unlock_memory(ptr: *mut u8, len: usize) -> Result<(), io::Error> {
         unsafe {
             if winapi::um::memoryapi::VirtualUnlock(ptr as *mut _, len) != 0 {
                 Ok(())
@@ -81,7 +81,7 @@ mod memory {
     }
 
     #[cfg(windows)]
-    pub fn explicit_bzero(ptr: *mut u8, len: usize) {
+    pub unsafe fn explicit_bzero(ptr: *mut u8, len: usize) {
         unsafe {
             // Use RtlSecureZeroMemory on Windows
             std::ptr::write_bytes(ptr, 0, len);
@@ -89,19 +89,19 @@ mod memory {
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub fn lock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
+    pub unsafe fn lock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
         // Platform not supported, but don't fail
         Ok(())
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub fn unlock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
+    pub unsafe fn unlock_memory(_ptr: *mut u8, _len: usize) -> Result<(), io::Error> {
         // Platform not supported, but don't fail
         Ok(())
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub fn explicit_bzero(ptr: *mut u8, len: usize) {
+    pub unsafe fn explicit_bzero(ptr: *mut u8, len: usize) {
         unsafe {
             // Fallback to volatile writes
             for i in 0..len {
@@ -307,6 +307,10 @@ pub struct CSecureBuffer {
 }
 
 impl CSecureBuffer {
+    /// # Safety
+    ///
+    /// Allocates a new `CSecureBuffer` and returns a raw pointer. Caller takes ownership
+    /// and must call `secure_buffer_destroy` to free it. `capacity` must be > 0.
     pub fn new(capacity: usize) -> *mut CSecureBuffer {
         match SecureBuffer::new(capacity) {
             Ok(buffer) => {
@@ -319,6 +323,11 @@ impl CSecureBuffer {
         }
     }
 
+    /// # Safety
+    ///
+    /// `self.inner` and `data` must be valid and non-null. `data` must point to at least
+    /// `len` readable bytes. This function dereferences raw pointers and copies data into
+    /// the secure buffer.
     pub unsafe fn write(&mut self, data: *const u8, len: usize) -> i32 {
         if self.inner.is_null() || data.is_null() {
             return -1;
@@ -331,6 +340,10 @@ impl CSecureBuffer {
         }
     }
 
+    /// # Safety
+    ///
+    /// `self.inner` and `buf` must be valid and non-null. `buf` must be writable for at least
+    /// `buf_len` bytes. This function writes to the provided buffer.
     pub unsafe fn read(&self, buf: *mut u8, buf_len: usize) -> i32 {
         if self.inner.is_null() || buf.is_null() {
             return -1;
@@ -343,6 +356,10 @@ impl CSecureBuffer {
         }
     }
 
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer returned from `CSecureBuffer::new`. After calling this
+    /// function the caller must not access the pointer again.
     pub unsafe fn destroy(ptr: *mut CSecureBuffer) {
         if !ptr.is_null() {
             let boxed = Box::from_raw(ptr);
@@ -355,11 +372,21 @@ impl CSecureBuffer {
 
 // C FFI exports
 #[no_mangle]
+/// # Safety
+///
+/// Returns a heap-allocated `CSecureBuffer` pointer. The caller takes ownership
+/// and must call `secure_buffer_destroy` to free it. This function itself does
+/// not dereference caller pointers.
 pub extern "C" fn secure_buffer_new(capacity: usize) -> *mut CSecureBuffer {
     CSecureBuffer::new(capacity)
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `secure_buffer_new` and not
+/// concurrently accessed by other threads. `data` must point to `len` readable
+/// bytes. The function will copy `len` bytes into the secure buffer.
 pub unsafe extern "C" fn secure_buffer_write(
     buffer: *mut CSecureBuffer,
     data: *const u8,
@@ -372,6 +399,11 @@ pub unsafe extern "C" fn secure_buffer_write(
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a valid pointer returned by `secure_buffer_new`. `buf` must
+/// point to `buf_len` writable bytes. The function will write up to `buf_len`
+/// bytes into `buf` and return the number of bytes written.
 pub unsafe extern "C" fn secure_buffer_read(
     buffer: *const CSecureBuffer,
     buf: *mut u8,
@@ -384,6 +416,10 @@ pub unsafe extern "C" fn secure_buffer_read(
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// `buffer` must be a pointer returned by `secure_buffer_new`. After calling
+/// this function the caller must not access the pointer again.
 pub unsafe extern "C" fn secure_buffer_destroy(buffer: *mut CSecureBuffer) {
     CSecureBuffer::destroy(buffer);
 }
