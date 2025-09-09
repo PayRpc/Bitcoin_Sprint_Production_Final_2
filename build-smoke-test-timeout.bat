@@ -20,8 +20,8 @@ set TIMEOUT=60
 timeout /t 1 /nobreak >nul
 echo Running build with %TIMEOUT% second timeout...
 
-REM Run go build with a timeout
-start /b cmd /c "go build -v ./cmd/smoke 2>&1 | tee build-output.log"
+REM Run go build with a timeout (Windows-native redirection)
+start /b cmd /c "go build -v ./cmd/smoke > build-output.log 2>&1 & type build-output.log"
 set start_time=%time%
 set wait_seconds=0
 
