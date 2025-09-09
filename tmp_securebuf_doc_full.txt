@@ -1,0 +1,285 @@
+package securebuf // import "github.com/PayRpc/Bitcoin-Sprint/internal/securebuf"
+
+Package securebuf provides secure memory buffer operations (fallback when CGO is
+disabled)
+
+Package securebuf - Enterprise API integration (fallback when CGO is disabled)
+This file provides high-level Go APIs that bridge to the enterprise FFI
+functions for environments where CGO/Rust library is not available. When CGO is
+enabled, the FFI-backed implementations in enterprise_ffi.go are used instead.
+
+VARIABLES
+
+var CGoEnabled = false
+    CGO is not available in this build; keep helpers consistent but static.
+
+
+FUNCTIONS
+
+func BindToHardware() error
+    Enterprise functions - only include what's NOT in enterprise_api.go
+
+func DisableAuditLogging() error
+    DisableAuditLogging disables enterprise audit logging
+
+func EnableAuditLogging(logPath string) error
+    EnableAuditLogging enables enterprise audit logging
+
+func EnableSideChannelProtection() error
+func EnableTamperDetection() error
+func FastEntropy() ([]byte, error)
+    FastEntropy generates fast entropy using hardware sources
+
+func GetCPUTemperature() (float64, error)
+    GetCPUTemperature gets CPU temperature for entropy
+
+func GetComplianceReport() (string, error)
+    GetComplianceReport gets enterprise compliance report
+
+func GetSecurityAuditLog() (string, error)
+func HMACBase64URL(key, data []byte) (string, error)
+func HMACHex(key, data []byte) (string, error)
+    HMAC functions
+
+func HybridEntropy(headers [][]byte) ([]byte, error)
+    HybridEntropy generates entropy mixing system sources with Bitcoin headers
+
+func IsAuditLoggingEnabled() bool
+    IsAuditLoggingEnabled checks if audit logging is enabled
+
+func SetEnterprisePolicy(policyJSON string) error
+    SetEnterprisePolicy sets enterprise security policy
+
+func SystemFingerprint() ([32]byte, error)
+    SystemFingerprint gets unique system identifier for entropy
+
+func ValidatePolicyCompliance() (bool, error)
+
+TYPES
+
+type BitcoinBloomFilter struct {
+	// Has unexported fields.
+}
+    BitcoinBloomFilter represents a high-performance Bitcoin Bloom filter
+    (disabled for non-CGO builds)
+
+func NewBitcoinBloomFilter(sizeBits uint64, numHashes uint8, tweak uint32, flags uint8, maxAgeSeconds uint64, batchSize uint64) (*BitcoinBloomFilter, error)
+    NewBitcoinBloomFilter creates a new Bitcoin Bloom filter with custom
+    parameters (disabled in non-CGO builds)
+
+func NewBitcoinBloomFilterDefault() (*BitcoinBloomFilter, error)
+    NewBitcoinBloomFilterDefault creates a Bitcoin Bloom filter with optimized
+    defaults (disabled in non-CGO builds)
+
+func (bf *BitcoinBloomFilter) AutoCleanup() error
+
+func (bf *BitcoinBloomFilter) Cleanup() error
+
+func (bf *BitcoinBloomFilter) ContainsBatch(entries []UTXOEntry) ([]bool, error)
+
+func (bf *BitcoinBloomFilter) ContainsUTXO(txHash []byte, outputIndex uint32, scriptPubKey []byte) (bool, error)
+
+func (bf *BitcoinBloomFilter) GetFalsePositiveRate() float64
+
+func (bf *BitcoinBloomFilter) GetStats() (*BloomFilterStats, error)
+
+func (bf *BitcoinBloomFilter) InsertBatch(entries []UTXOEntry) ([]bool, error)
+
+func (bf *BitcoinBloomFilter) InsertUTXO(txHash []byte, outputIndex uint32, scriptPubKey []byte, amount uint64) error
+    All other methods return appropriate errors or defaults for disabled builds
+
+func (bf *BitcoinBloomFilter) LoadBlock(blockData []byte, blockHeight uint64) error
+
+type BloomFilter struct {
+	// Has unexported fields.
+}
+    BloomFilter represents a Bitcoin-optimized bloom filter
+
+func (bf *BloomFilter) AutoCleanup() error
+    AutoCleanup enables automatic cleanup of old entries
+
+func (bf *BloomFilter) ContainsUTXO(txid []byte, outputIndex uint32) (bool, error)
+    ContainsUTXO checks if UTXO might be in the bloom filter
+
+func (bf *BloomFilter) Free()
+    Free releases bloom filter resources
+
+func (bf *BloomFilter) GetStats() (BloomFilterStats, error)
+    GetStats returns bloom filter statistics
+
+func (bf *BloomFilter) InsertUTXO(txid []byte, outputIndex uint32) error
+    InsertUTXO inserts a UTXO into the bloom filter
+
+type BloomFilterStats struct {
+	ItemCount          uint64  `json:"item_count"`
+	FalsePositiveRate  float64 `json:"false_positive_rate"`
+	MemoryUsageBytes   uint64  `json:"memory_usage_bytes"`
+	CompressionEnabled bool    `json:"compression_enabled"`
+	TimestampEntries   uint64  `json:"timestamp_entries"`
+	AverageAgeSeconds  float64 `json:"average_age_seconds"`
+}
+    BloomFilterStats contains bloom filter performance statistics
+
+type Buffer struct {
+	// Has unexported fields.
+}
+    Buffer represents a secure memory buffer (Go fallback implementation)
+
+func New(capacity int) (*Buffer, error)
+    New creates a new secure buffer with the specified capacity
+
+func NewWithFastEntropy(size int) (*Buffer, error)
+    NewWithFastEntropy creates buffer filled with fast entropy
+
+func NewWithHybridEntropy(size int, headers [][]byte) (*Buffer, error)
+    NewWithHybridEntropy creates buffer with hybrid entropy
+
+func NewWithSecurityLevel(size int, level SecurityLevel) (*Buffer, error)
+    NewWithSecurityLevel creates buffer with specific security level
+
+func (b *Buffer) AppendSecure(data []byte) error
+    AppendSecure appends data to the buffer securely
+
+func (b *Buffer) BindToHardware() error
+    BindToHardware binds buffer to hardware security module
+
+func (b *Buffer) Capacity() int
+    Capacity returns the maximum capacity of the buffer
+
+func (b *Buffer) Clone() (*Buffer, error)
+    Clone creates a secure copy of the buffer
+
+func (b *Buffer) Close() error
+    Close frees the buffer and clears its content
+
+func (b *Buffer) EnableTamperDetection() error
+    EnableTamperDetection enables tamper detection for the buffer
+
+func (b *Buffer) Free()
+    Free securely destroys the buffer by zeroizing memory
+
+func (b *Buffer) HMACBase64URL(data []byte) (string, error)
+    HMACBase64URL computes HMAC-SHA256 and returns as base64url string
+
+func (b *Buffer) HMACHex(data []byte) (string, error)
+    HMACHex computes HMAC-SHA256 and returns as hex string
+
+func (b *Buffer) IntegrityCheck() bool
+    IntegrityCheck verifies the buffer integrity (basic check in Go fallback)
+
+func (b *Buffer) IsHardwareBacked() bool
+    IsHardwareBacked checks if buffer is hardware-backed
+
+func (b *Buffer) IsLocked() bool
+    IsLocked returns whether the buffer memory is locked (always false in Go
+    fallback)
+
+func (b *Buffer) IsTampered() bool
+    IsTampered checks if buffer has been tampered with
+
+func (b *Buffer) Len() int
+    Len returns the current length of data in the buffer
+
+func (b *Buffer) LockMemory() error
+    LockMemory locks the buffer in memory to prevent swapping (no-op in Go
+    fallback)
+
+func (b *Buffer) Read(dst []byte) (int, error)
+    Read reads data from the buffer into the provided slice
+
+func (b *Buffer) ReadToSlice() ([]byte, error)
+    ReadToSlice reads all buffer content to a new slice
+
+func (b *Buffer) UnlockMemory() error
+    UnlockMemory unlocks the buffer memory (no-op in Go fallback)
+
+func (b *Buffer) Write(data []byte) error
+    Write securely writes data to the buffer
+
+func (b *Buffer) Zeroize() error
+    Zeroize clears the buffer content
+
+type SecureBuffer struct {
+	// Has unexported fields.
+}
+    SecureBuffer represents a disabled secure buffer
+
+func NewSecureBuffer(capacity int) (*SecureBuffer, error)
+    NewSecureBuffer creates a new stub secure buffer
+
+func NewSecureBufferWithLevel(capacity int, level int) (*SecureBuffer, error)
+    NewSecureBufferWithLevel creates a new stub secure buffer with security
+    level
+
+func (sb *SecureBuffer) Capacity() int
+    Capacity returns the buffer capacity
+
+func (sb *SecureBuffer) Free() error
+    Free frees the buffer
+
+func (sb *SecureBuffer) IntegrityCheck() bool
+    IntegrityCheck performs integrity check (always passes in stub)
+
+func (sb *SecureBuffer) IsHardwareBacked() bool
+    IsHardwareBacked checks if buffer is hardware backed (always false in stub)
+
+func (sb *SecureBuffer) IsLocked() bool
+    IsLocked checks if buffer is locked (always false in stub)
+
+func (sb *SecureBuffer) IsTampered() bool
+    IsTampered checks if buffer is tampered (always false in stub)
+
+func (sb *SecureBuffer) Len() int
+    Len returns the current data length
+
+func (sb *SecureBuffer) Lock() error
+    Lock locks the buffer (stub - no actual locking)
+
+func (sb *SecureBuffer) Read(data []byte) (int, error)
+    Read reads data from the buffer
+
+func (sb *SecureBuffer) Unlock() error
+    Unlock unlocks the buffer (stub - no actual unlocking)
+
+func (sb *SecureBuffer) Write(data []byte) (int, error)
+    Write writes data to the buffer
+
+func (sb *SecureBuffer) Zeroize() error
+    Zeroize clears the buffer
+
+type SecureBufferPool struct {
+	// Has unexported fields.
+}
+    SecureBufferPool manages a pool of secure buffers for flat latency
+
+func NewSecureBufferPool() *SecureBufferPool
+    NewSecureBufferPool creates a new secure buffer pool
+
+func (sbp *SecureBufferPool) Get(size int) (*Buffer, error)
+    Get retrieves a secure buffer from the pool
+
+func (sbp *SecureBufferPool) GetPoolStats() map[string]interface{}
+    GetPoolStats returns statistics about the secure buffer pool
+
+func (sbp *SecureBufferPool) Put(buf *Buffer)
+    Put returns a secure buffer to the pool after secure zeroization
+
+type SecurityLevel int
+    Security levels for enterprise buffers
+
+const (
+	SecurityStandard SecurityLevel = iota
+	SecurityHigh
+	SecurityEnterprise
+	SecurityForensicResistant
+	SecurityHardware
+)
+type UTXOEntry struct {
+	TxHash       []byte `json:"tx_hash"`
+	OutputIndex  uint32 `json:"output_index"`
+	ScriptPubKey []byte `json:"script_pub_key"`
+	Amount       uint64 `json:"amount"`
+}
+    UTXOEntry represents a UTXO entry for batch operations
+
+

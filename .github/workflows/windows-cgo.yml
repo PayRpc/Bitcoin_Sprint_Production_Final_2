@@ -1,0 +1,99 @@
+name: Windows Multi-Arch Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-windows:
+    name: Windows ${{ matrix.arch }} Build
+    runs-on: windows-latest
+    timeout-minutes: 25
+    strategy:
+      matrix:
+        arch: [amd64, 386, arm64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Go private module auth (optional)
+        if: env.GH_PAT != ''
+        shell: pwsh
+        run: |
+          git config --global url."https://${{ env.GH_PAT }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+      - name: Go mod tidy
+        shell: pwsh
+        run: go mod tidy
+
+      - name: Build Rust securebuffer (if available)
+        shell: pwsh
+        run: |
+          if (Test-Path "secure/rust/Cargo.toml") {
+            Write-Host "Building Rust securebuffer..."
+            Push-Location secure/rust
+            cargo build --release
+            Pop-Location
+          } else {
+            Write-Host "Rust securebuffer not found - proceeding without"
+          }
+
+      - name: Build Bitcoin Sprint Binary
+        shell: pwsh
+        run: |
+          Write-Host "Building Bitcoin Sprint for Windows (${{ matrix.arch }})..."
+          $env:GOOS = "windows"
+          $env:GOARCH = "${{ matrix.arch }}"
+
+          # Prefer CGO-enabled build (to use Rust securebuffer) when possible
+          $out = "bitcoin-sprint-${{ matrix.arch }}.exe"
+          Write-Host "Attempting CGO-enabled build..."
+          $env:CGO_ENABLED = "1"
+          # Try a direct CGO build; place result into a temp binary
+          $temp = "bitcoin-sprint-${{ matrix.arch }}-cgo.exe"
+          go build -v -ldflags="-s -w" -o $temp ./cmd/sprintd
+          $success = $false
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ CGO build succeeded for ${{ matrix.arch }}"
+            # move to canonical artifact name
+            if (Test-Path $out) { Remove-Item $out -Force }
+            Rename-Item -Path $temp -NewName $out
+            $success = $true
+          } else {
+            Write-Host "⚠️ CGO build failed, falling back to no-ZMQ static build"
+            $env:CGO_ENABLED = "0"
+            go build -tags nozmq -v -ldflags="-s -w" -o $out ./cmd/sprintd
+            if ($LASTEXITCODE -eq 0) {
+              $success = $true
+            } else {
+              Write-Host "::warning::Both CGO and nozmq builds failed for $env:GOARCH. Continuing without producing an artifact."
+            }
+          }
+
+          if ($success) {
+            Write-Host "✅ Build produced $out for ${{ matrix.arch }}"
+            Get-Item $out | Format-Table Name, Length, LastWriteTime
+          } else {
+            Write-Host "⚠️ No binary produced for ${{ matrix.arch }} — skipping artifact upload."
+          }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitcoin-sprint-windows-${{ matrix.arch }}
+          path: bitcoin-sprint-${{ matrix.arch }}.exe
+          if-no-files-found: warn

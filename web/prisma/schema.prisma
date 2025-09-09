@@ -1,0 +1,25 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  email       String
+  company     String?
+  tier        String   @default("FREE")
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  revoked     Boolean  @default(false)
+  
+  // Analytics metadata
+  lastUsedAt  DateTime?
+  requests    Int      @default(0)
+  requestsToday Int     @default(0)
+  blocksToday Int      @default(0)
+}

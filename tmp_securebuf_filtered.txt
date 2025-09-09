@@ -1,0 +1,86 @@
+
+var CGoEnabled = false
+func BindToHardware() error
+func DisableAuditLogging() error
+func EnableAuditLogging(logPath string) error
+func EnableSideChannelProtection() error
+func EnableTamperDetection() error
+func FastEntropy() ([]byte, error)
+func GetCPUTemperature() (float64, error)
+func GetComplianceReport() (string, error)
+func GetSecurityAuditLog() (string, error)
+func HMACBase64URL(key, data []byte) (string, error)
+func HMACHex(key, data []byte) (string, error)
+func HybridEntropy(headers [][]byte) ([]byte, error)
+func IsAuditLoggingEnabled() bool
+func SetEnterprisePolicy(policyJSON string) error
+func SystemFingerprint() ([32]byte, error)
+func ValidatePolicyCompliance() (bool, error)
+type BitcoinBloomFilter struct {
+func NewBitcoinBloomFilter(sizeBits uint64, numHashes uint8, tweak uint32, flags uint8, maxAgeSeconds uint64, batchSize uint64) (*BitcoinBloomFilter, error)
+func NewBitcoinBloomFilterDefault() (*BitcoinBloomFilter, error)
+func (bf *BitcoinBloomFilter) AutoCleanup() error
+func (bf *BitcoinBloomFilter) Cleanup() error
+func (bf *BitcoinBloomFilter) ContainsBatch(entries []UTXOEntry) ([]bool, error)
+func (bf *BitcoinBloomFilter) ContainsUTXO(txHash []byte, outputIndex uint32, scriptPubKey []byte) (bool, error)
+func (bf *BitcoinBloomFilter) GetFalsePositiveRate() float64
+func (bf *BitcoinBloomFilter) GetStats() (*BloomFilterStats, error)
+func (bf *BitcoinBloomFilter) InsertBatch(entries []UTXOEntry) ([]bool, error)
+func (bf *BitcoinBloomFilter) InsertUTXO(txHash []byte, outputIndex uint32, scriptPubKey []byte, amount uint64) error
+func (bf *BitcoinBloomFilter) LoadBlock(blockData []byte, blockHeight uint64) error
+type BloomFilter struct {
+func (bf *BloomFilter) AutoCleanup() error
+func (bf *BloomFilter) ContainsUTXO(txid []byte, outputIndex uint32) (bool, error)
+func (bf *BloomFilter) Free()
+func (bf *BloomFilter) GetStats() (BloomFilterStats, error)
+func (bf *BloomFilter) InsertUTXO(txid []byte, outputIndex uint32) error
+type BloomFilterStats struct {
+type Buffer struct {
+func New(capacity int) (*Buffer, error)
+func NewWithFastEntropy(size int) (*Buffer, error)
+func NewWithHybridEntropy(size int, headers [][]byte) (*Buffer, error)
+func NewWithSecurityLevel(size int, level SecurityLevel) (*Buffer, error)
+func (b *Buffer) AppendSecure(data []byte) error
+func (b *Buffer) BindToHardware() error
+func (b *Buffer) Capacity() int
+func (b *Buffer) Clone() (*Buffer, error)
+func (b *Buffer) Close() error
+func (b *Buffer) EnableTamperDetection() error
+func (b *Buffer) Free()
+func (b *Buffer) HMACBase64URL(data []byte) (string, error)
+func (b *Buffer) HMACHex(data []byte) (string, error)
+func (b *Buffer) IntegrityCheck() bool
+func (b *Buffer) IsHardwareBacked() bool
+func (b *Buffer) IsLocked() bool
+func (b *Buffer) IsTampered() bool
+func (b *Buffer) Len() int
+func (b *Buffer) LockMemory() error
+func (b *Buffer) Read(dst []byte) (int, error)
+func (b *Buffer) ReadToSlice() ([]byte, error)
+func (b *Buffer) UnlockMemory() error
+func (b *Buffer) Write(data []byte) error
+func (b *Buffer) Zeroize() error
+type SecureBuffer struct {
+func NewSecureBuffer(capacity int) (*SecureBuffer, error)
+func NewSecureBufferWithLevel(capacity int, level int) (*SecureBuffer, error)
+func (sb *SecureBuffer) Capacity() int
+func (sb *SecureBuffer) Free() error
+func (sb *SecureBuffer) IntegrityCheck() bool
+func (sb *SecureBuffer) IsHardwareBacked() bool
+func (sb *SecureBuffer) IsLocked() bool
+func (sb *SecureBuffer) IsTampered() bool
+func (sb *SecureBuffer) Len() int
+func (sb *SecureBuffer) Lock() error
+func (sb *SecureBuffer) Read(data []byte) (int, error)
+func (sb *SecureBuffer) Unlock() error
+func (sb *SecureBuffer) Write(data []byte) (int, error)
+func (sb *SecureBuffer) Zeroize() error
+type SecureBufferPool struct {
+func NewSecureBufferPool() *SecureBufferPool
+func (sbp *SecureBufferPool) Get(size int) (*Buffer, error)
+func (sbp *SecureBufferPool) GetPoolStats() map[string]interface{}
+func (sbp *SecureBufferPool) Put(buf *Buffer)
+type SecurityLevel int
+const (
+type UTXOEntry struct {
+
