@@ -484,10 +484,12 @@ impl StorageVerifier {
             });
         }
 
-        // Verify proof data size matches expected sample size
-        if proof.proof_data.len() != challenge.sample_size as usize {
+        // Verify proof data size is non-empty and does not exceed expected sample size.
+        // The final chunk may be smaller than the nominal chunk_size used for earlier chunks,
+        // so accept proof sizes <= challenge.sample_size.
+        if proof.proof_data.is_empty() || proof.proof_data.len() > challenge.sample_size as usize {
             return Err(StorageVerificationError::CryptographicFailure {
-                reason: format!("Proof data size {} does not match expected {}",
+                reason: format!("Proof data size {} is invalid; expected >0 and <= {}",
                                proof.proof_data.len(), challenge.sample_size),
             });
         }
@@ -815,10 +817,13 @@ impl StorageVerifier {
             return Ok(false);
         }
 
-        // Verify sample size matches challenge requirements
-        if sample.len() != challenge.sample_size as usize {
+        // Verify sample size is non-empty and does not exceed challenge requirements.
+        // For files whose final chunk is smaller than the nominal chunk_size, the sample
+        // may be shorter than challenge.sample_size; allow that as long as it's > 0 and
+        // not larger than the nominal sample_size.
+        if sample.is_empty() || sample.len() > challenge.sample_size as usize {
             return Err(StorageVerificationError::CryptographicFailure {
-                reason: format!("Sample size mismatch: got {}, expected {}",
+                reason: format!("Sample size mismatch: got {}, expected >0 and <= {}",
                                sample.len(), challenge.sample_size),
             });
         }
