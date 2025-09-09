@@ -1,0 +1,13 @@
+[workspace]
+members = ["secure/rust"]
+
+[package]
+name = "bitcoin-sprint-upload-snapshot"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+# Intentionally minimal - snapshot points to the secure crate
+
+[profile.release]
+opt-level = 3

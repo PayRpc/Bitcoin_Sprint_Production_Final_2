@@ -1,0 +1,35 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Go
+*.exe
+*.dll
+*.so
+bin/
+
+# Node
+node_modules/
+coverage/
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE/OS
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+artifacts/
+
+# Temporary
+*.tmp
+*.temp
+
+# exclude upload-ready itself
+/upload-ready/
