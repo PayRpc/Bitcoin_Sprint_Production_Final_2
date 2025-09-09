@@ -1,0 +1,24 @@
+[package]
+name = "securebuffer-service"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+lazy_static = "1.5"
+# If Linux/macOS daemon:
+signal-hook = { version = "0.3", optional = true }
+# If Windows service:
+windows-service = { version = "0.6", optional = true }
+# Your SecureBuffer crate:
+# Option A: workspace/path dep
+secure_buffer = { path = "../.." }
+# Option B: published crate (rename accordingly)
+# securebuffer = "x.y.z"
+
+[features]
+default = []
+api = []
+system-tray = []
+unix-signals = ["signal-hook"]
+win-service = ["windows-service"]

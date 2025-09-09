@@ -1,0 +1,844 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   C:\Projects 2\Bitcoin_Sprint_Production_3\secure\rust\Cargo.toml
+workspace: C:\Projects 2\Bitcoin_Sprint_Production_3\secure\Cargo.toml
+warning: virtual workspace defaulting to `resolver = "1"` despite one or more workspace members being on edition 2021 which implies `resolver = "2"`
+note: to keep the current resolver, specify `workspace.resolver = "1"` in the workspace root's manifest
+note: to use the edition 2021 resolver, specify `workspace.resolver = "2"` in the workspace root's manifest
+note: for more details see https://doc.rust-lang.org/cargo/reference/resolver.html#resolver-versions
+warning: C:\Projects 2\Bitcoin_Sprint_Production_3\secure\rust\Cargo.toml: unused manifest key: target.x86_64-pc-windows-gnu.rustflags
+   Compiling securebuffer v0.1.0 (C:\Projects 2\Bitcoin_Sprint_Production_3\secure\rust)
+error: unused import: `Duration`
+ --> rust\src\storage_verifier.rs:7:41
+  |
+7 | use std::time::{SystemTime, UNIX_EPOCH, Duration};
+  |                                         ^^^^^^^^
+  |
+  = note: `-D unused-imports` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(unused_imports)]`
+
+error: unused import: `thiserror::Error`
+  --> rust\src\storage_verifier.rs:14:5
+   |
+14 | use thiserror::Error;
+   |     ^^^^^^^^^^^^^^^^
+
+error: unused import: `tokio::sync::RwLock`
+  --> rust\src\storage_verifier.rs:15:5
+   |
+15 | use tokio::sync::RwLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+error: unused imports: `debug`, `info`, and `warn`
+  --> rust\src\storage_verifier.rs:16:11
+   |
+16 | use log::{info, warn, error, debug};
+   |           ^^^^  ^^^^         ^^^^^
+
+error: unused import: `std::time::Instant`
+ --> rust\src\entropy.rs:4:5
+  |
+4 | use std::time::Instant;
+  |     ^^^^^^^^^^^^^^^^^^
+
+error: unused import: `Rng`
+ --> rust\src\entropy.rs:6:21
+  |
+6 | use rand::{RngCore, Rng};
+  |                     ^^^
+
+error: unused import: `super::*`
+   --> rust\src\entropy.rs:330:9
+    |
+330 |     use super::*;
+    |         ^^^^^^^^
+
+error: unnecessary `unsafe` block
+   --> rust\src\lib.rs:178:9
+    |
+178 |         unsafe {
+    |         ^^^^^^ unnecessary `unsafe` block
+    |
+    = note: `-D unused-unsafe` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(unused_unsafe)]`
+
+error: unnecessary `unsafe` block
+   --> rust\src\lib.rs:266:13
+    |
+266 |             unsafe {
+    |             ^^^^^^ unnecessary `unsafe` block
+
+error: unnecessary `unsafe` block
+   --> rust\src\lib.rs:460:13
+    |
+460 |             unsafe {
+    |             ^^^^^^ unnecessary `unsafe` block
+
+error: field `0` is never read
+    --> rust\src\lib.rs:1198:30
+     |
+1198 | pub struct BloomFilterHandle(*mut bloom_filter::UniversalBloomFilter);
+     |            ----------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |            |
+     |            field in this struct
+     |
+     = help: consider removing this field
+     = note: `-D dead-code` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(dead_code)]`
+
+error: field `network_stats` is never read
+   --> rust\src\bloom_filter.rs:223:5
+    |
+214 | pub struct UniversalBloomFilter {
+    |            -------------------- field in this struct
+...
+223 |     network_stats: Arc<DashMap<String, NetworkStats>>, // Per-network statistics
+    |     ^^^^^^^^^^^^^
+
+error: manually reimplementing `div_ceil`
+   --> rust\src\bloom_filter.rs:255:28
+    |
+255 |         let bucket_count = (cfg.size + 63) / 64;
+    |                            ^^^^^^^^^^^^^^^^^^^^ help: consider using `.div_ceil()`: `cfg.size.div_ceil(64)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_div_ceil
+    = note: `-D clippy::manual-div-ceil` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::manual_div_ceil)]`
+
+error: redundant slicing of the whole range
+   --> rust\src\bloom_filter.rs:291:36
+    |
+291 |         preimage.extend_from_slice(&txid.as_bytes()[..]);
+    |                                    ^^^^^^^^^^^^^^^^^^^^ help: use the original value instead: `txid.as_bytes()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_slicing
+    = note: `-D clippy::redundant-slicing` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::redundant_slicing)]`
+
+error: redundant slicing of the whole range
+   --> rust\src\bloom_filter.rs:311:44
+    |
+311 |                 preimage.extend_from_slice(&txid.as_bytes()[..]);
+    |                                            ^^^^^^^^^^^^^^^^^^^^ help: use the original value instead: `txid.as_bytes()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_slicing
+
+error: redundant slicing of the whole range
+   --> rust\src\bloom_filter.rs:356:36
+    |
+356 |         preimage.extend_from_slice(&txid.as_bytes()[..]);
+    |                                    ^^^^^^^^^^^^^^^^^^^^ help: use the original value instead: `txid.as_bytes()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_slicing
+
+error: this `if` statement can be collapsed
+   --> rust\src\storage_verifier.rs:519:13
+    |
+519 | /             if challenge.commitment_alg == "merkle_sha256" {
+520 | |                 if !self.verify_merkle_proof(merkle_proof, &proof.proof_data, &challenge.file_id).await? {
+521 | |                     return Ok(false);
+522 | |                 }
+523 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#collapsible_if
+    = note: `-D clippy::collapsible-if` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::collapsible_if)]`
+help: collapse nested if block
+    |
+519 ~             if challenge.commitment_alg == "merkle_sha256"
+520 ~                 && !self.verify_merkle_proof(merkle_proof, &proof.proof_data, &challenge.file_id).await? {
+521 |                     return Ok(false);
+522 ~                 }
+    |
+
+error: the borrowed expression implements the required traits
+   --> rust\src\storage_verifier.rs:636:36
+    |
+636 |             combined_hasher.update(&current_hash);
+    |                                    ^^^^^^^^^^^^^ help: change this to: `current_hash`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args
+    = note: `-D clippy::needless-borrows-for-generic-args` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_borrows_for_generic_args)]`
+
+error: the borrowed expression implements the required traits
+   --> rust\src\storage_verifier.rs:637:36
+    |
+637 |             combined_hasher.update(&sibling_hash);
+    |                                    ^^^^^^^^^^^^^ help: change this to: `sibling_hash`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args
+
+error: redundant pattern matching, consider using `is_ok()`
+   --> rust\src\entropy.rs:130:12
+    |
+130 |     if let Ok(_) = collector.get_os_entropy(&mut output) {
+    |     -------^^^^^---------------------------------------- help: try: `if collector.get_os_entropy(&mut output).is_ok()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_pattern_matching
+    = note: `-D clippy::redundant-pattern-matching` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::redundant_pattern_matching)]`
+
+error: casting to the same type is unnecessary (`f32` -> `f32`)
+   --> rust\src\entropy.rs:275:23
+    |
+275 |         total_temp += usage as f32;
+    |                       ^^^^^^^^^^^^ help: try: `usage`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_cast
+    = note: `-D clippy::unnecessary-cast` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::unnecessary_cast)]`
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:474:57
+    |
+474 |         std::ptr::copy_nonoverlapping(entropy.as_ptr(), output, 32);
+    |                                                         ^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+    = note: `#[deny(clippy::not_unsafe_ptr_arg_deref)]` on by default
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:489:35
+    |
+489 |                 let header_ptr = *headers_ptr.add(i);
+    |                                   ^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:490:36
+    |
+490 |                 let header_size = *header_sizes_ptr.add(i);
+    |                                    ^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:500:57
+    |
+500 |         std::ptr::copy_nonoverlapping(entropy.as_ptr(), output, 32);
+    |                                                         ^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:514:61
+    |
+514 |         std::ptr::copy_nonoverlapping(fingerprint.as_ptr(), output, 32);
+    |                                                             ^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this pattern reimplements `Result::unwrap_or`
+   --> rust\src\entropy.rs:521:5
+    |
+521 | /     match get_cpu_temperature() {
+522 | |         Ok(temp) => temp,
+523 | |         Err(_) => -1.0,
+524 | |     }
+    | |_____^ help: replace with: `get_cpu_temperature().unwrap_or(-1.0)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_unwrap_or
+    = note: `-D clippy::manual-unwrap-or` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::manual_unwrap_or)]`
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:536:57
+    |
+536 |         std::ptr::copy_nonoverlapping(entropy.as_ptr(), output, 32);
+    |                                                         ^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:551:35
+    |
+551 |                 let header_ptr = *headers_ptr.add(i);
+    |                                   ^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:552:36
+    |
+552 |                 let header_size = *header_sizes_ptr.add(i);
+    |                                    ^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\entropy.rs:562:57
+    |
+562 |         std::ptr::copy_nonoverlapping(entropy.as_ptr(), output, 32);
+    |                                                         ^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: redundant pattern matching, consider using `is_err()`
+   --> rust\src\entropy.rs:573:12
+    |
+573 |     if let Err(_) = collector.get_os_entropy(&mut secret) {
+    |     -------^^^^^^---------------------------------------- help: try: `if collector.get_os_entropy(&mut secret).is_err()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_pattern_matching
+
+error: the loop variable `i` is used to index `secret`
+   --> rust\src\entropy.rs:580:14
+    |
+580 |     for i in 0..8 {
+    |              ^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+    = note: `-D clippy::needless-range-loop` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator and enumerate()
+    |
+580 -     for i in 0..8 {
+580 +     for (i, <item>) in secret.iter_mut().enumerate().take(8) {
+    |
+
+error: the borrowed expression implements the required traits
+   --> rust\src\entropy.rs:591:72
+    |
+591 |     base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &secret)
+    |                                                                        ^^^^^^^ help: change this to: `secret`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args
+
+error: the borrowed expression implements the required traits
+   --> rust\src\entropy.rs:597:17
+    |
+597 |     hex::encode(&secret)
+    |                 ^^^^^^^ help: change this to: `secret`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args
+
+error: manually reimplementing `div_ceil`
+  --> rust\src\securebuffer_entropy.rs:43:22
+   |
+43 |         let chunks = (capacity + 31) / 32; // Round up to cover full capacity
+   |                      ^^^^^^^^^^^^^^^^^^^^ help: consider using `.div_ceil()`: `capacity.div_ceil(32)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_div_ceil
+
+error: manually reimplementing `div_ceil`
+  --> rust\src\securebuffer_entropy.rs:82:22
+   |
+82 |         let chunks = (capacity + 31) / 32;
+   |                      ^^^^^^^^^^^^^^^^^^^^ help: consider using `.div_ceil()`: `capacity.div_ceil(32)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_div_ceil
+
+error: the loop variable `i` is used to index `new_entropy`
+   --> rust\src\securebuffer_entropy.rs:151:22
+    |
+151 |             for i in 0..mix_len {
+    |                      ^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+help: consider using an iterator and enumerate()
+    |
+151 -             for i in 0..mix_len {
+151 +             for (i, <item>) in new_entropy.iter().enumerate().take(mix_len) {
+    |
+
+error: unsafe function's docs are missing a `# Safety` section
+   --> rust\src\lib.rs:525:5
+    |
+525 |     pub unsafe fn write(&mut self, data: *const u8, len: usize) -> i32 {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+    = note: `-D clippy::missing-safety-doc` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::missing_safety_doc)]`
+
+error: unsafe function's docs are missing a `# Safety` section
+   --> rust\src\lib.rs:537:5
+    |
+537 |     pub unsafe fn read(&self, buf: *mut u8, buf_len: usize) -> i32 {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+   --> rust\src\lib.rs:549:5
+    |
+549 |     pub unsafe fn destroy(ptr: *mut CSecureBuffer) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:731:47
+    |
+731 |     let network_str = unsafe { CStr::from_ptr(network_name) }.to_str().unwrap_or("bitcoin");
+    |                                               ^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:788:58
+    |
+788 |     let txid_slice = unsafe { std::slice::from_raw_parts(txid_bytes, 32) };
+    |                                                          ^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:810:59
+    |
+810 |     let txids_slice = unsafe { std::slice::from_raw_parts(txid_bytes, count * 32) };
+    |                                                           ^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:811:59
+    |
+811 |     let vouts_slice = unsafe { std::slice::from_raw_parts(vouts, count) };
+    |                                                           ^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: the loop variable `i` is used to index `vouts_slice`
+   --> rust\src\lib.rs:814:14
+    |
+814 |     for i in 0..count {
+    |              ^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+help: consider using an iterator and enumerate()
+    |
+814 -     for i in 0..count {
+814 +     for (i, <item>) in vouts_slice.iter().enumerate().take(count) {
+    |
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:843:58
+    |
+843 |     let txid_slice = unsafe { std::slice::from_raw_parts(txid_bytes, 32) };
+    |                                                          ^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:867:59
+    |
+867 |     let txids_slice = unsafe { std::slice::from_raw_parts(txid_bytes, count * 32) };
+    |                                                           ^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:868:59
+    |
+868 |     let vouts_slice = unsafe { std::slice::from_raw_parts(vouts, count) };
+    |                                                           ^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:869:65
+    |
+869 |     let results_slice = unsafe { std::slice::from_raw_parts_mut(results, count) };
+    |                                                                 ^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: the loop variable `i` is used to index `vouts_slice`
+   --> rust\src\lib.rs:872:14
+    |
+872 |     for i in 0..count {
+    |              ^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+help: consider using an iterator and enumerate()
+    |
+872 -     for i in 0..count {
+872 +     for (i, <item>) in vouts_slice.iter().enumerate().take(count) {
+    |
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:906:59
+    |
+906 |     let block_slice = unsafe { std::slice::from_raw_parts(block_data, block_size) };
+    |                                                           ^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:971:10
+    |
+971 |         *item_count = stats.item_count;
+    |          ^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:972:10
+    |
+972 |         *false_positive_count = stats.false_positive_count;
+    |          ^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:973:10
+    |
+973 |         *theoretical_fp_rate = stats.theoretical_fp_rate;
+    |          ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:974:10
+    |
+974 |         *memory_usage_bytes = stats.memory_usage_bytes;
+    |          ^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:975:10
+    |
+975 |         *timestamp_entries = stats.timestamp_entries;
+    |          ^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: this public function might dereference a raw pointer but is not marked `unsafe`
+   --> rust\src\lib.rs:976:10
+    |
+976 |         *average_age_seconds = stats.average_age_seconds;
+    |          ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#not_unsafe_ptr_arg_deref
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1028:1
+     |
+1028 | pub unsafe extern "C" fn fast_entropy_c(output: *mut u8) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1040:1
+     |
+1040 | / pub unsafe extern "C" fn hybrid_entropy_c(
+1041 | |     headers: *const *const u8,
+1042 | |     header_lengths: *const usize,
+1043 | |     header_count: usize,
+1044 | |     output: *mut u8,
+1045 | | ) -> c_int {
+     | |__________^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1071:1
+     |
+1071 | / pub unsafe extern "C" fn enterprise_entropy_c(
+1072 | |     headers: *const *const u8,
+1073 | |     header_lengths: *const usize,
+1074 | |     header_count: usize,
+...    |
+1077 | |     output: *mut u8,
+1078 | | ) -> c_int {
+     | |__________^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1110:1
+     |
+1110 | pub unsafe extern "C" fn system_fingerprint_c(output: *mut u8) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: this pattern reimplements `Result::unwrap_or`
+    --> rust\src\lib.rs:1125:5
+     |
+1125 | /     match entropy::get_cpu_temperature() {
+1126 | |         Ok(temp) => temp,
+1127 | |         Err(_) => -1.0, // Error indicator
+1128 | |     }
+     | |_____^ help: replace with: `entropy::get_cpu_temperature().unwrap_or(-1.0)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_unwrap_or
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1133:1
+     |
+1133 | pub unsafe extern "C" fn fast_entropy_with_fingerprint_c(output: *mut u8) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1145:1
+     |
+1145 | pub unsafe extern "C" fn generate_admin_secret_c(output: *mut u8, output_len: usize) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1157:1
+     |
+1157 | pub unsafe extern "C" fn generate_admin_secret_base64_c(output: *mut c_char, output_len: usize) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1176:1
+     |
+1176 | pub unsafe extern "C" fn generate_admin_secret_hex_c(output: *mut c_char, output_len: usize) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1202:1
+     |
+1202 | pub unsafe extern "C" fn bloom_filter_new(size: usize, num_hashes: usize) -> *mut c_void {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1216:1
+     |
+1216 | pub unsafe extern "C" fn bloom_filter_insert(filter: *mut c_void, data: *const u8, len: usize) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1232:1
+     |
+1232 | pub unsafe extern "C" fn bloom_filter_contains(filter: *mut c_void, data: *const u8, len: usize) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1248:1
+     |
+1248 | pub unsafe extern "C" fn bloom_filter_count(filter: *mut c_void) -> usize {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1259:1
+     |
+1259 | pub unsafe extern "C" fn bloom_filter_false_positive_rate(filter: *mut c_void) -> f64 {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1270:1
+     |
+1270 | pub unsafe extern "C" fn bloom_filter_free(filter: *mut c_void) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1282:1
+     |
+1282 | pub unsafe extern "C" fn securebuffer_new_with_security_level(capacity: usize, security_level: c_int) -> *mut c_void {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1296:1
+     |
+1296 | pub unsafe extern "C" fn securebuffer_enable_audit_logging(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1309:1
+     |
+1309 | pub unsafe extern "C" fn securebuffer_disable_audit_logging(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1320:1
+     |
+1320 | pub unsafe extern "C" fn securebuffer_is_audit_logging_enabled(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1330:1
+     |
+1330 | pub unsafe extern "C" fn securebuffer_bind_to_hardware(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1343:1
+     |
+1343 | pub unsafe extern "C" fn securebuffer_is_hardware_backed(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1353:1
+     |
+1353 | pub unsafe extern "C" fn securebuffer_enable_tamper_detection(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1366:1
+     |
+1366 | pub unsafe extern "C" fn securebuffer_is_tampered(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1376:1
+     |
+1376 | pub unsafe extern "C" fn securebuffer_enable_side_channel_protection(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1389:1
+     |
+1389 | pub unsafe extern "C" fn securebuffer_set_enterprise_policy(buffer: *mut c_void, policy: *const c_char) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1408:1
+     |
+1408 | pub unsafe extern "C" fn securebuffer_validate_policy_compliance(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1418:1
+     |
+1418 | pub unsafe extern "C" fn securebuffer_get_compliance_report(buffer: *mut c_void) -> *mut c_char {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1432:1
+     |
+1432 | pub unsafe extern "C" fn securebuffer_get_security_audit_log(buffer: *mut c_void) -> *mut c_char {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1446:1
+     |
+1446 | pub unsafe extern "C" fn securebuffer_hmac_hex(buffer: *mut c_void, key: *const u8, key_len: usize) -> *mut c_char {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1465:1
+     |
+1465 | pub unsafe extern "C" fn securebuffer_hmac_base64url(buffer: *mut c_void, key: *const u8, key_len: usize) -> *mut c_char {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1484:1
+     |
+1484 | pub unsafe extern "C" fn securebuffer_free_cstr(ptr: *mut c_char) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1496:1
+     |
+1496 | pub unsafe extern "C" fn secure_buffer_capacity(buffer: *mut c_void) -> usize {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1506:1
+     |
+1506 | pub unsafe extern "C" fn secure_buffer_len(buffer: *mut c_void) -> usize {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1516:1
+     |
+1516 | pub unsafe extern "C" fn secure_buffer_is_locked(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1526:1
+     |
+1526 | pub unsafe extern "C" fn secure_buffer_lock(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1539:1
+     |
+1539 | pub unsafe extern "C" fn secure_buffer_unlock(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1552:1
+     |
+1552 | pub unsafe extern "C" fn secure_buffer_integrity_check(buffer: *mut c_void) -> c_int {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1562:1
+     |
+1562 | pub unsafe extern "C" fn secure_buffer_zeroize(buffer: *mut c_void) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: unsafe function's docs are missing a `# Safety` section
+    --> rust\src\lib.rs:1571:1
+     |
+1571 | pub unsafe extern "C" fn secure_buffer_free(buffer: *mut c_void) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc
+
+error: could not compile `securebuffer` (lib) due to 97 previous errors
