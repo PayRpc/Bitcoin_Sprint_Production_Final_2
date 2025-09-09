@@ -1,0 +1,156 @@
+[
+  {
+    "blocks_today": 0,
+    "company": "Enterprise Demo Corp",
+    "created_at": "2025-09-05T23:16:25.000Z",
+    "email": "demo@enterprise.com",
+    "expires_at": "2026-09-05T23:16:25.000Z",
+    "id": "demo-enterprise-001",
+    "key": "sprint-ent_XbF9YlK8mNqPzR3vW7dGhJ2cA5eT1uI9oL6sQ4rE8wY",
+    "last_used_at": null,
+    "requests": 0,
+    "requests_today": 0,
+    "revoked": false,
+    "tier": "ENTERPRISE"
+  },
+  {
+    "blocks_today": 0,
+    "company": "Pro Demo Inc",
+    "created_at": "2025-09-05T23:16:25.000Z",
+    "email": "demo@pro.com",
+    "expires_at": "2026-09-05T23:16:25.000Z",
+    "id": "demo-pro-002",
+    "key": "sprint-pro_MnB4VcX1kLp3YzR7wE5sQ8dF2hG6jT9uI0oA3vN8xK7",
+    "last_used_at": null,
+    "requests": 0,
+    "requests_today": 0,
+    "revoked": false,
+    "tier": "PRO"
+  },
+  {
+    "blocks_today": 0,
+    "company": null,
+    "created_at": "2025-09-05T23:16:25.000Z",
+    "email": "demo@free.com",
+    "expires_at": "2026-09-05T23:16:25.000Z",
+    "id": "demo-free-003",
+    "key": "sprint-free_QrS5ZlM9pNv2YkF8xG3wE6dA1hJ4tU7oI0cL8bV9mX2",
+    "last_used_at": null,
+    "requests": 0,
+    "requests_today": 0,
+    "revoked": false,
+    "tier": "FREE"
+  },
+  {
+    "blocks_today": 0,
+    "company": null,
+    "created_at": "2025-09-07T12:02:00.389Z",
+    "email": "tester@example.com",
+    "expires_at": "2026-09-07T12:02:00.389Z",
+    "id": 1757246520389,
+    "key": "free-80f911d2ee5568b430f23766b0809bab0e37a415da9b157d",
+    "last_used_at": null,
+    "requests": 0,
+    "requests_today": 0,
+    "revoked": false,
+    "tier": "free"
+  },
+  {
+    "created_at": "2025-09-07T12:46:42Z",
+    "email": "tester@example.com",
+    "id": 1757249202535189800,
+    "key": "e09ea5c465a6958b8f851fb3985b721b88a1e7e4f841db25946ec163298b0cd7",
+    "tier": "FREE"
+  },
+  {
+    "created_at": "2025-09-07T12:47:35Z",
+    "email": "tester@example.com",
+    "id": 1757249255723510800,
+    "key": "f704a3e5e2c43d1736c29decdd25889af846631074e461827331b8b2ac9468a3",
+    "tier": "FREE"
+  },
+  {
+    "created_at": "2025-09-07T12:48:30Z",
+    "email": "tester@example.com",
+    "id": 1757249310826701000,
+    "key": "3790ccb128c838167fa01c52f166266e2d6a08cc531eb33e09e4b12f809a6aec",
+    "tier": "FREE"
+  },
+  {
+    "created_at": "2025-09-07T12:50:25Z",
+    "email": "tester@example.com",
+    "id": 1757249425656745000,
+    "key": "067476a5fe36ee3f617053a0cf7a24afa58f668642942cb317980c533b691c6e",
+    "tier": "FREE"
+  },
+  {
+    "created_at": "2025-09-07T12:54:51Z",
+    "email": "tester@example.com",
+    "id": 1757249691630246700,
+    "key": "826ebbad07f1ff134b3becb28e0314d900b8a4ab41d11ed9905a16fcea22f28c",
+    "tier": "FREE"
+  },
+  {
+    "created_at": "2025-09-07T12:54:56Z",
+    "email": "tester@example.com",
+    "id": 1757249696222431200,
+    "key": "a9f682627bcb94ce2fc16527db2fa58306d11b1656c809da39d6b329cfa31a33",
+    "tier": "FREE"
+  },
+  {
+    "created_at": "2025-09-07T12:57:18Z",
+    "email": "smoke+test@example.com",
+    "id": 1757249838321864700,
+    "key": "3432f2ccaec76f6581339dc72d2071044d1b3ec54e32e1466330d52ab8d326e8",
+    "tier": "FREE"
+  },
+  {
+    "blocks_today": 0,
+    "company": "Bitcoincab",
+    "created_at": "2025-09-07T15:52:04.937Z",
+    "email": "coma.retained@gmail.com",
+    "expires_at": "2026-09-07T15:52:04.867Z",
+    "id": "cmf9vfck20000t85orv9j7t77",
+    "key": "sprint-entplus_6DH5EesO3_Tfv82iQC3o_6BTUVpkMerzZhS9vQtpCFY",
+    "last_used_at": null,
+    "requests": 0,
+    "requests_today": 0,
+    "revoked": false,
+    "tier": "ENTERPRISE_PLUS"
+  },
+  {
+    "created_at": "2025-09-07T16:51:38Z",
+    "email": "test@example.com",
+    "id": 1757263898110965200,
+    "key": "b73cc26c8d77f97fc6b45e2e5c80121cb3fdc0dd920491b11239f567839b4a1a",
+    "tier": "FREE"
+  },
+  {
+    "id": "cmfaaq40y0001t8v0oycfx61u",
+    "key": "sprint-free_SZtTBU_Cvrv_2dayWH8-IyZ1nUYbafP3sOkT5MkCAOM",
+    "email": "emiliano.arlington@gmail.com",
+    "company": "Bitcoincab",
+    "tier": "FREE",
+    "created_at": "2025-09-07T23:00:21.346Z",
+    "expires_at": "2026-09-07T23:00:21.337Z",
+    "revoked": false,
+    "last_used_at": null,
+    "requests": 0,
+    "requests_today": 0,
+    "blocks_today": 0
+  },
+  {
+    "id": "cmfac6cce0000t8pkimxzqj7g",
+    "key": "sprint_OnWrOaFxGWFoFFQbfkBsuOPytHsCJ-G9IlceQ2QaQpA",
+    "email": "dev@local",
+    "company": null,
+    "tier": "free",
+    "created_at": "2025-09-07T23:40:58.238Z",
+    "expires_at": "2026-09-07T23:40:58.233Z",
+    "revoked": false,
+    "last_used_at": null,
+    "requests": 0,
+    "requests_today": 0,
+    "blocks_today": 0
+  }
+]

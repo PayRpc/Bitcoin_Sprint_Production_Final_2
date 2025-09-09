@@ -1,0 +1,118 @@
+[package]
+name = "securebuffer"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "securebuffer"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+zeroize = { version = "1.8", features = ["derive"] }
+thiserror = "1.0"
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.21"
+libc = "0.2"
+sysinfo = "0.30"
+rand = "0.8"
+tokio = { version = "1.0", features = ["full"] }
+
+# Optional IPFS support
+reqwest = { version = "0.12", optional = true }
+log = "0.4"
+env_logger = "0.10"
+
+# Bitcoin integration
+bitcoin = "0.31"
+bitcoin_hashes = "0.13"
+
+# High-performance data structures
+dashmap = "6.1"
+rayon = "1.10"
+
+# Networking and TLS
+tokio-rustls = "0.26"
+rustls = "0.23"
+rustls-native-certs = "0.8"
+
+# HTTP and metrics
+hyper = { version = "1.0", features = ["full"] }
+prometheus = { version = "0.13", features = ["process"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Web server dependencies
+actix-web = { version = "4.4", optional = true }
+actix-rt = { version = "2.9", optional = true }
+uuid = { version = "1.0", features = ["v4", "serde"], optional = true }
+futures = { version = "0.3", optional = true }
+
+# Axum web framework (modern alternative)
+axum = { version = "0.7", features = ["json", "query", "tracing"], optional = true }
+axum-extra = { version = "0.9", features = ["typed-header"], optional = true }
+
+# Additional dependencies for the new server
+chrono = { version = "0.4", features = ["serde"], optional = true }
+dotenvy = { version = "0.15", optional = true }
+num_cpus = { version = "1.16", optional = true }
+
+# TLS and Security
+axum-server = { version = "0.6", features = ["tls-rustls"], optional = true }
+rustls-pemfile = { version = "2.0", optional = true }
+
+# Distributed Rate Limiting
+redis = { version = "0.25", features = ["tokio-comp", "connection-manager"], optional = true }
+
+# Circuit Breakers and Resilience
+tower = { version = "0.4", features = ["retry", "timeout", "load-shed", "limit"], optional = true }
+tower-http = { version = "0.5", features = ["cors", "request-id", "trace"], optional = true }
+
+# Enhanced Monitoring
+tokio-metrics = "0.3"
+hdrhistogram = "7.5"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json"] }
+lazy_static = "1.4"
+
+[features]
+default = []
+ipfs = ["reqwest"]
+web-server = ["actix-web", "actix-rt", "uuid", "futures", "axum", "axum-extra", "chrono", "dotenvy", "num_cpus"]
+axum-only = ["axum", "axum-extra", "chrono", "dotenvy", "num_cpus", "uuid"]
+hardened = ["web-server", "axum-server", "rustls-pemfile", "redis", "tower", "tower-http"]
+
+[[bin]]
+name = "bitcoin_sprint_api"
+path = "src/bin/bitcoin_sprint_api.rs"
+required-features = ["web-server"]
+
+[[bin]]
+name = "bitcoin_sprint_api_new"
+path = "src/bin/bitcoin_sprint_api_new.rs"
+required-features = ["axum-only"]
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["memoryapi", "winbase", "wincrypt"] }
+
+# MinGW-specific configuration for Go CGO integration  
+[target.x86_64-pc-windows-gnu]
+rustflags = [
+    "-C", "link-args=-lmsvcrt",
+    "-C", "link-args=-lkernel32", 
+    "-C", "link-args=-lgcc_s",
+    "-C", "link-args=-lgcc",
+    "-C", "link-args=-lmingw32",
+    "-C", "target-feature=+crt-static"
+]
+
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+opt-level = 3
+strip = true
