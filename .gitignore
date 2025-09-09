@@ -520,3 +520,9 @@ Bitcoin_Sprint_Cleaned_*/
 # Environment Protection
 .env.enterprise.protected
 .env.checksum
+
+# Added by cleanup script on 2025-09-08T22:23:00.4816650-04:00
+ # local cleanup: ignore generated output and Node modules
+web/out/
+/logs/
+/.vscode/
