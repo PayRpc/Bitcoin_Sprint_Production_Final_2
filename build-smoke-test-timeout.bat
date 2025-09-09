@@ -11,8 +11,17 @@ echo CGO_ENABLED=%CGO_ENABLED%
 echo PATH segment: %PATH:~0,100%...
 
 echo Building Go smoke test...
-set CC=C:\\temp\\cl_wrapper.bat
-set CXX=C:\\temp\\cl_wrapper.bat
+rem Use canonical cl wrapper in repository scripts folder. This makes the smoke test portable.
+set SCRIPTS_DIR=%~dp0scripts
+rem Compute short (8.3) path for scripts dir to avoid spaces in the path when invoked by cgo
+for %%I in ("%SCRIPTS_DIR%") do set SCRIPTS_SHORT=%%~sI
+set LOCAL_TMP=%SCRIPTS_SHORT%\\tmp_wrapper
+if not exist "%LOCAL_TMP%" mkdir "%LOCAL_TMP%"
+copy /Y "%SCRIPTS_SHORT%\\cl_wrapper_fixed.bat" "%LOCAL_TMP%\\cl_wrapper.bat" >nul 2>&1
+rem Ensure the local tmp wrapper folder is on PATH and use the bare filename so Windows finds it via PATH
+set "PATH=%LOCAL_TMP%;%PATH%"
+set "CC=cl_wrapper.bat"
+set "CXX=cl_wrapper.bat"
 set CGO_ENABLED=1
 
 REM Build with a simple timeout
