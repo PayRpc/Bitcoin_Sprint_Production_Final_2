@@ -5,15 +5,27 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
 
+## 📂 Repository Organization
+
+This repository has been organized for clarity and maintainability:
+
+- **[bin/](bin/)** - Compiled executables
+- **[docs/](docs/)** - Documentation (see [Documentation Index](docs/DOCUMENTATION_INDEX.md))
+- **[config/](config/)** - Configuration files
+- **[scripts/](scripts/)** - Build and utility scripts
+- **[internal/](internal/)** - Core implementation packages
+
+For more details, see [Repository Organization](docs/REPOSITORY_ORGANIZATION.md).
+
 ## 🎯 Quick Start
 
 ### 1. **Build & Run Backend**
 ```bash
 # Build optimized version
-powershell -ExecutionPolicy Bypass -File ./build-optimized.ps1 -Release
+powershell -ExecutionPolicy Bypass -File ./scripts/build-optimized.ps1 -Release
 
 # Start (auto-detects best tier)
-./bitcoin-sprint.exe --tier=auto
+./bin/bitcoin-sprint.exe --tier=auto
 ```
 
 ### 2. **Start Web Dashboard**
