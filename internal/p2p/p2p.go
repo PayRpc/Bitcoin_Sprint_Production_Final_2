@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"net"
@@ -173,25 +174,33 @@ func New(cfg config.Config, blockChan chan blocks.BlockEvent, mem *mempool.Mempo
 	// Initialize secure authenticator with HMAC secret from environment
 	secret := []byte(os.Getenv("PEER_HMAC_SECRET"))
 	if len(secret) == 0 {
-		// Generate secure default secret using SecureBuffer
+		// Generate secure default secret
 		logger.Warn("PEER_HMAC_SECRET not set - generating secure default")
+		secret = make([]byte, 64)
+
+		// Try to use SecureBuffer if CGO is available, otherwise use crypto/rand
 		secretBuf, err := securebuf.New(64) // 64 bytes for strong HMAC secret
 		if err != nil {
-			return nil, fmt.Errorf("failed to create secure buffer for secret: %w", err)
-		}
-		defer secretBuf.Free()
+			// Fallback to crypto/rand if SecureBuffer fails (CGO disabled)
+			logger.Warn("SecureBuffer not available, using crypto/rand fallback")
+			if _, err := rand.Read(secret); err != nil {
+				return nil, fmt.Errorf("failed to generate random secret: %w", err)
+			}
+		} else {
+			defer secretBuf.Free()
 
-		// Use a deterministic but secure default for dev
-		defaultSecret := []byte("bitcoin-sprint-default-peer-secret-key-2025-entropy-backed")
-		if err := secretBuf.Write(defaultSecret); err != nil {
-			return nil, fmt.Errorf("failed to write to secure buffer: %w", err)
-		}
+			// Use a deterministic but secure default for dev
+			defaultSecret := []byte("bitcoin-sprint-default-peer-secret-key-2025-entropy-backed")
+			if err := secretBuf.Write(defaultSecret); err != nil {
+				return nil, fmt.Errorf("failed to write to secure buffer: %w", err)
+			}
 
-		secretBytes, err := secretBuf.ReadToSlice()
-		if err != nil {
-			return nil, fmt.Errorf("failed to read from secure buffer: %w", err)
+			secretBytes, err := secretBuf.ReadToSlice()
+			if err != nil {
+				return nil, fmt.Errorf("failed to read from secure buffer: %w", err)
+			}
+			secret = secretBytes
 		}
-		secret = secretBytes
 	}
 
 	auth, err := NewAuthenticator(secret, logger)

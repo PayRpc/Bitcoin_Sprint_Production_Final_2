@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -38,17 +39,24 @@ func TestSingleflightCollapse(t *testing.T) {
 	}
 	const N = 64
 	var wg sync.WaitGroup
+	var testErr error
+	var testErrMu sync.Mutex
 	wg.Add(N)
 	for i := 0; i < N; i++ {
 		go func() {
 			defer wg.Done()
 			v, _, err := c.GetOrLoad(context.Background(), "k", time.Minute, loader)
 			if err != nil || v.(string) != "ok" {
-				t.Fatalf("bad: %v %v", v, err)
+				testErrMu.Lock()
+				testErr = fmt.Errorf("bad: %v %v", v, err)
+				testErrMu.Unlock()
 			}
 		}()
 	}
 	wg.Wait()
+	if testErr != nil {
+		t.Fatal(testErr)
+	}
 	if got := atomic.LoadInt32(&calls); got != 1 {
 		t.Fatalf("loader called %d times; want 1", got)
 	}

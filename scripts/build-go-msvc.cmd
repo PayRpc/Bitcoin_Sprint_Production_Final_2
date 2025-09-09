@@ -13,14 +13,18 @@ where cl || (
 set CC=cl
 set CXX=cl
 set CGO_ENABLED=1
-set CGO_CFLAGS=-D_CRT_SECURE_NO_WARNINGS
-set CGO_CXXFLAGS=-D_CRT_SECURE_NO_WARNINGS
+REM Override CGO flags to prevent GCC-style flags from being passed to MSVC
+set CGO_CFLAGS=-D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_WIN32
+set CGO_CXXFLAGS=-D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_WIN32
+set CGO_LDFLAGS=-nodefaultlib:libcmt
 
 cd /d "%~dp0\.."
 echo Building Go smoke test (MSVC)...
 echo CC=%CC%
 echo CXX=%CXX%
 echo CGO_ENABLED=%CGO_ENABLED%
+echo CGO_CFLAGS=%CGO_CFLAGS%
+echo CGO_CXXFLAGS=%CGO_CXXFLAGS%
 
 go build -v ./cmd/smoke
 if %ERRORLEVEL% neq 0 (
