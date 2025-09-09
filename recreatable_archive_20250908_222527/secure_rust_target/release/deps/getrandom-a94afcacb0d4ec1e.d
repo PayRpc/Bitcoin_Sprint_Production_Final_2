@@ -1,0 +1,11 @@
+C:\Projects 2\Bitcoin_Sprint_Production_2\secure\rust\target\release\deps\getrandom-a94afcacb0d4ec1e.d: C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\lib.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\util.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error_impls.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\windows.rs
+
+C:\Projects 2\Bitcoin_Sprint_Production_2\secure\rust\target\release\deps\libgetrandom-a94afcacb0d4ec1e.rlib: C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\lib.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\util.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error_impls.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\windows.rs
+
+C:\Projects 2\Bitcoin_Sprint_Production_2\secure\rust\target\release\deps\libgetrandom-a94afcacb0d4ec1e.rmeta: C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\lib.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\util.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error_impls.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\windows.rs
+
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\lib.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\util.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\error_impls.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\getrandom-0.2.16\src\windows.rs:

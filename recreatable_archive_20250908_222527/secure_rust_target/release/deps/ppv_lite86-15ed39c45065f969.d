@@ -1,0 +1,11 @@
+C:\Projects 2\Bitcoin_Sprint_Production_2\secure\rust\target\release\deps\ppv_lite86-15ed39c45065f969.d: C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\lib.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\soft.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\types.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\mod.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\sse2.rs
+
+C:\Projects 2\Bitcoin_Sprint_Production_2\secure\rust\target\release\deps\libppv_lite86-15ed39c45065f969.rlib: C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\lib.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\soft.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\types.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\mod.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\sse2.rs
+
+C:\Projects 2\Bitcoin_Sprint_Production_2\secure\rust\target\release\deps\libppv_lite86-15ed39c45065f969.rmeta: C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\lib.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\soft.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\types.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\mod.rs C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\sse2.rs
+
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\lib.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\soft.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\types.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\mod.rs:
+C:\Users\comar\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ppv-lite86-0.2.21\src\x86_64\sse2.rs:
