@@ -151,9 +151,9 @@ impl SecureBuffer {
         
         // XOR with existing content
         unsafe {
-            for i in 0..mix_len {
+            for (i, &b) in new_entropy.iter().enumerate().take(mix_len) {
                 let existing = *self.data.add(i);
-                *self.data.add(i) = existing ^ new_entropy[i];
+                *self.data.add(i) = existing ^ b;
             }
         }
         

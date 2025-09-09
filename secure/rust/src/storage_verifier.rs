@@ -1015,7 +1015,7 @@ mod tests {
 
         // This should now succeed because we have the correct proof data
         match verifier.verify_proof(proof).await {
-            Ok(v) => assert_eq!(v, true),
+            Ok(v) => assert!(v),
             Err(e) => panic!("verify_proof returned error: {:?}", e),
         }
     }

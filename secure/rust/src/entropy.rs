@@ -111,8 +111,8 @@ impl EntropyCollector {
         let jitter = self.collect_jitter();
         let jitter_bytes = jitter.to_le_bytes();
 
-        for i in 0..8 {
-            combined_entropy[i] ^= jitter_bytes[i];
+        for (i, &b) in jitter_bytes.iter().enumerate().take(8) {
+            combined_entropy[i] ^= b;
             combined_entropy[i + 24] ^= jitter_bytes[7 - i];
         }
 
@@ -126,14 +126,14 @@ pub fn fast_entropy() -> [u8; 32] {
     let mut output = [0u8; 32];
 
     // Use cryptographically secure OS randomness as primary source
-    if let Ok(_) = collector.get_os_entropy(&mut output) {
+    if collector.get_os_entropy(&mut output).is_ok() {
         // Add timing jitter as additional entropy (supplemental only)
         let jitter = collector.collect_jitter();
         let jitter_bytes = jitter.to_le_bytes();
 
         // Mix jitter with OS entropy using cryptographically sound mixing
-        for i in 0..8 {
-            output[i] ^= jitter_bytes[i];
+        for (i, &b) in jitter_bytes.iter().enumerate().take(8) {
+            output[i] ^= b;
             output[i + 24] ^= jitter_bytes[7 - i];
         }
     } else {
@@ -154,16 +154,16 @@ pub fn hybrid_entropy(headers: &[Vec<u8>]) -> [u8; 32] {
 
     // Mix in blockchain entropy non-deterministically
     let block_entropy = collector.extract_block_entropy(headers);
-    for i in 0..32 {
-        output[i] ^= block_entropy[i];
+    for (i, &b) in block_entropy.iter().enumerate().take(32) {
+        output[i] ^= b;
     }
 
     // Add final timing jitter layer
     let jitter = collector.collect_jitter();
     let jitter_bytes = jitter.to_le_bytes();
 
-    for i in 0..8 {
-        output[i] ^= jitter_bytes[i];
+    for (i, &b) in jitter_bytes.iter().enumerate().take(8) {
+        output[i] ^= b;
         output[i + 16] ^= jitter_bytes[7 - i];
     }
 
@@ -191,8 +191,8 @@ pub fn system_fingerprint() -> [u8; 32] {
     let ts_bytes = timestamp.to_le_bytes();
 
     // Mix in system identifiers
-    for i in 0..4 {
-        output[i] ^= pid_bytes[i % 4];
+    for (i, &b) in pid_bytes.iter().enumerate().take(4) {
+        output[i] ^= b;
         output[i + 8] ^= tid_bytes[i % tid_bytes.len()];
         output[i + 16] ^= ts_bytes[i % 8];
     }
@@ -200,8 +200,8 @@ pub fn system_fingerprint() -> [u8; 32] {
     // Add jitter for additional randomness
     let final_jitter = collector.collect_jitter();
     let jitter_bytes = final_jitter.to_le_bytes();
-    for i in 0..8 {
-        output[i * 4 % 32] ^= jitter_bytes[i];
+    for (i, &b) in jitter_bytes.iter().enumerate().take(8) {
+        output[i * 4 % 32] ^= b;
     }
 
     output
@@ -270,8 +270,8 @@ pub fn get_cpu_temperature() -> Result<f32, EntropyError> {
         // Note: Temperature might not be available on all systems
         // This is a placeholder - actual temperature reading depends on hardware support
         // For now, we'll use CPU usage as a proxy for "system activity"
-        let usage = cpu.cpu_usage();
-        total_temp += usage as f32;
+    let usage = cpu.cpu_usage();
+    total_temp += usage;
         cpu_count += 1;
     }
 
@@ -326,6 +326,7 @@ pub fn hybrid_entropy_with_fingerprint(headers: &[Vec<u8>]) -> [u8; 32] {
     output
 }
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]
@@ -530,10 +531,7 @@ pub unsafe extern "C" fn system_fingerprint_ffi(output: *mut u8, len: usize) -> 
 ///
 /// Safe to call from any thread. Returns -1.0 on error.
 pub extern "C" fn get_cpu_temperature_ffi() -> f32 {
-    match get_cpu_temperature() {
-        Ok(temp) => temp,
-        Err(_) => -1.0,
-    }
+    get_cpu_temperature().unwrap_or(-1.0)
 }
 
 /// # Safety
@@ -588,16 +586,15 @@ pub fn generate_admin_secret_raw() -> [u8; 32] {
     let mut secret = [0u8; 32];
 
     // Use high-quality entropy for admin secrets
-    if let Err(_) = collector.get_os_entropy(&mut secret) {
+    if collector.get_os_entropy(&mut secret).is_err() {
         // Fallback to system fingerprint if OS entropy fails
         secret = system_fingerprint();
     }
 
     // Mix with additional entropy sources
     let jitter = collector.collect_jitter();
-    for i in 0..8 {
-        let jitter_byte = ((jitter >> (i * 4)) & 0xFF) as u8;
-        secret[i] ^= jitter_byte;
+    for (i, &b) in jitter.to_le_bytes().iter().enumerate().take(8) {
+        secret[i] ^= b;
     }
 
     secret
@@ -606,11 +603,11 @@ pub fn generate_admin_secret_raw() -> [u8; 32] {
 /// Generate admin secret as base64 string
 pub fn generate_admin_secret_base64() -> String {
     let secret = generate_admin_secret_raw();
-    base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &secret)
+    base64::Engine::encode(&base64::engine::general_purpose::STANDARD, secret)
 }
 
 /// Generate admin secret as hex string
 pub fn generate_admin_secret_hex() -> String {
     let secret = generate_admin_secret_raw();
-    hex::encode(&secret)
+    hex::encode(secret)
 }
