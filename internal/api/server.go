@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PayRpc/Bitcoin-Sprint/internal/fastpath"
 	"go.uber.org/zap"
 )
 
@@ -34,11 +35,17 @@ func (s *Server) RegisterSprintValueRoutes() {
 
 		// Value demonstration endpoint (with auth)
 		s.httpMux.HandleFunc("/api/v1/sprint/value", s.auth(SprintValueHandler))
+		
+		// Register optimized p99 latency endpoints using fastpath (NO AUTH - public read-only endpoints)
+		s.httpMux.HandleFunc("/v1/btc/latest", fastpath.LatestHandler)
+		s.httpMux.HandleFunc("/v1/btc/status", fastpath.StatusHandler)
 
-		s.logger.Info("Sprint competitive advantage routes registered with authentication",
+		s.logger.Info("Sprint competitive advantage routes registered",
 			zap.String("universal_endpoint", "/api/v1/universal/{chain}/{method}"),
 			zap.String("auth_required", "true"),
-			zap.String("value_props", "flat_p99,unified_api,predictive_cache,enterprise_tiers"))
+			zap.String("value_props", "flat_p99,unified_api,predictive_cache,enterprise_tiers"),
+			zap.String("fastpath_endpoints", "/v1/btc/latest,/v1/btc/status"),
+			zap.String("fastpath_latency", "p99 ≤ 5ms"))
 	}
 }
 
@@ -209,6 +216,13 @@ func (s *Server) Run(ctx context.Context) {
 	go func() {
 		<-ctx.Done()
 		s.logger.Info("Shutdown signal received, stopping HTTP server")
+		
+		// Stop fastpath integration first
+		if s.fastpathIntegration != nil {
+			s.logger.Info("Stopping fastpath integration")
+			s.fastpathIntegration.Stop()
+		}
+		
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := s.srv.Shutdown(shutdownCtx); err != nil {
@@ -227,6 +241,13 @@ func (s *Server) Run(ctx context.Context) {
 		zap.String("metrics", "/metrics"),
 		zap.String("universal", "/api/v1/universal/*"))
 
+	// Initialize fastpath integration for p99 latency optimizations
+	if s.fastpathIntegration == nil {
+		s.logger.Info("Initializing fastpath integration for p99 latency optimizations")
+		s.fastpathIntegration = NewFastpathIntegration(s, s.logger)
+		s.fastpathIntegration.StartRefreshers()
+	}
+	
 	// Print startup banner before starting server
 	fmt.Println("Bitcoin Sprint starting…")
 	fmt.Printf(" API:      http://%s\n", addr)
@@ -234,6 +255,7 @@ func (s *Server) Run(ctx context.Context) {
 	fmt.Println(" PProf:    disabled")
 	fmt.Println(" P2P:      enabled (min proto 70016, witness only)")
 	fmt.Println(" Workers:  16")
+	fmt.Println(" Fastpath: enabled (p99 ≤ 5ms)")
 	fmt.Println()
 
 	// Defer diagnostics until after listener is created to avoid false failures

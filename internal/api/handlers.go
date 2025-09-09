@@ -13,6 +13,7 @@ import (
 
 	"github.com/PayRpc/Bitcoin-Sprint/internal/blocks"
 	"github.com/PayRpc/Bitcoin-Sprint/internal/config"
+	"github.com/PayRpc/Bitcoin-Sprint/internal/fastpath"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 )
@@ -893,6 +894,21 @@ func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
 	metrics = append(metrics, "tier_requests_total{tier=\"turbo\"} 0")
 	metrics = append(metrics, "tier_requests_total{tier=\"enterprise\"} 0")
 
+	// Add fastpath metrics
+	metrics = append(metrics, "")
+	metrics = append(metrics, "# Fastpath p99 optimized endpoint metrics")
+	metrics = append(metrics, "# HELP bitcoin_sprint_fastpath_latest_hits_total Total number of /v1/btc/latest endpoint hits")
+	metrics = append(metrics, "# TYPE bitcoin_sprint_fastpath_latest_hits_total counter")
+	metrics = append(metrics, fmt.Sprintf("bitcoin_sprint_fastpath_latest_hits_total %d", fastpath.GetLatestHits()))
+	
+	metrics = append(metrics, "# HELP bitcoin_sprint_fastpath_status_hits_total Total number of /v1/btc/status endpoint hits")
+	metrics = append(metrics, "# TYPE bitcoin_sprint_fastpath_status_hits_total counter")
+	metrics = append(metrics, fmt.Sprintf("bitcoin_sprint_fastpath_status_hits_total %d", fastpath.GetStatusHits()))
+	
+	metrics = append(metrics, "# HELP bitcoin_sprint_fastpath_latency_target Targeted p99 latency in milliseconds")
+	metrics = append(metrics, "# TYPE bitcoin_sprint_fastpath_latency_target gauge")
+	metrics = append(metrics, "bitcoin_sprint_fastpath_latency_target 5")
+	
 	// Add rate limit hits/blocks
 	metrics = append(metrics, "")
 	metrics = append(metrics, "# Rate limiting metrics")

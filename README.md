@@ -28,6 +28,18 @@ powershell -ExecutionPolicy Bypass -File ./scripts/build-optimized.ps1 -Release
 ./bin/bitcoin-sprint.exe --tier=auto
 ```
 
+### 2. **Run P99 Latency Benchmarks**
+```bash
+# Navigate to benchmark directory
+cd benchmark/latency
+
+# Run benchmarks and update report
+./run_and_update_report.ps1
+
+# View the report
+code P99_LATENCY_REPORT.md
+```
+
 ### 2. **Start Web Dashboard**
 ```bash
 cd web

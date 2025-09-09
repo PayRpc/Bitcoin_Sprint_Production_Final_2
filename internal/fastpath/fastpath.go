@@ -101,3 +101,10 @@ func RefreshStatus(status string, connections int, uptimeSeconds int64) {
 	b = append(b, `}`...)
 	statusSnap.Store(b) // atomic swap
 }
+
+// RefreshLatestRaw updates the latest snapshot with raw JSON data.
+// This is useful when you already have a marshalled JSON object.
+// This should be called from a background process, not directly in handlers.
+func RefreshLatestRaw(jsonData []byte) {
+	latestSnap.Store(jsonData) // atomic swap
+}

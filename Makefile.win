@@ -44,10 +44,13 @@ help:
 	@echo   clean     - Clean build artifacts
 	@echo   test      - Run tests
 	@echo   demo      - Build demo version
+	@echo   p99bench  - Run p99 latency benchmarks
+	@echo   p99server - Run p99 latency test server
 	@echo.
 	@echo Usage:
 	@echo   nmake /f Makefile.win all
 	@echo   nmake /f Makefile.win clean
+	@echo   nmake /f Makefile.win p99bench
 
 check:
 	@echo Checking Windows build environment...
@@ -96,5 +99,32 @@ clean:
 
 install: all
 	@echo Installing to Windows Apps...
+
+
+# P99 Latency benchmark targets
+p99bench:
+	@echo Running p99 latency benchmarks...
+	@if not exist bin mkdir bin
+	@go build -o bin\p99_server.exe .\benchmark\latency\p99_server.go
+	@powershell -ExecutionPolicy Bypass -File .\benchmark\latency\p99_benchmark.ps1
+	@echo P99 benchmark complete!
+
+p99server:
+	@echo Starting p99 latency test server...
+	@if not exist bin mkdir bin
+	@go build -o bin\p99_server.exe .\benchmark\latency\p99_server.go
+	@start /b bin\p99_server.exe -port 8765
+	@echo P99 server started on port 8765
+	@echo Try: http://localhost:8765/v1/latest
+
+p99report:
+	@echo Generating p99 latency report...
+	@powershell -ExecutionPolicy Bypass -File .\benchmark\latency\run_and_update_report.ps1
+	@echo Report generated at benchmark\latency\P99_LATENCY_REPORT.md
+
+p99verify:
+	@echo Verifying p99 implementation...
+	@powershell -ExecutionPolicy Bypass -File .\scripts\verify_p99_implementation.ps1
+	@echo Verification complete!
 	@copy $(BUILD_DIR)\bitcoin-sprint$(EXE_EXT) %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\
 	@echo Installed!

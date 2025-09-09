@@ -110,19 +110,9 @@ func (cb *CircuitBreaker) recordFailure(now time.Time) {
 	}
 }
 
-// ShouldQueue determines if requests should be queued based on tier
-func (cb *CircuitBreaker) ShouldQueue() bool {
+// IsTripped returns true if the circuit breaker is in the open state
+func (cb *CircuitBreaker) IsTripped() bool {
 	cb.mu.RLock()
 	defer cb.mu.RUnlock()
-
-	switch cb.tier {
-	case config.TierFree:
-		return false // Drop excess requests immediately
-	case config.TierPro, config.TierBusiness:
-		return cb.state != "open" // Queue if circuit is not open
-	case config.TierTurbo, config.TierEnterprise:
-		return true // Always queue for premium tiers (hedging + retries)
-	default:
-		return false
-	}
+	return cb.state == "open"
 }

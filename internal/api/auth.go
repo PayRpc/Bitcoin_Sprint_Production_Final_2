@@ -48,6 +48,9 @@ type Server struct {
 	circuitBreaker    *CircuitBreaker
 	backends          *BackendRegistry
 	ethereumRelay     *relay.EthereumRelay
+	
+	// Fastpath integration for optimized p99 latency
+	fastpathIntegration *FastpathIntegration
 	solanaRelay       *relay.SolanaRelay
 	clock             Clock
 	randReader        RandomReader
