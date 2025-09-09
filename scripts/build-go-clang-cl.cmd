@@ -22,14 +22,18 @@ set CGO_CXXFLAGS=
 set CGO_LDFLAGS=
 
 rem Add flags that make clang-cl accept/ignore GCC-style options Go may pass
-set CGO_CFLAGS=-Wno-error -Wno-error=unknown-argument -Wno-error=unknown-warning-option -Wno-error=unused-macros -Wno-unused-macros -Qunused-arguments
+set CGO_CFLAGS=-Wno-error -Wno-error=unknown-argument -Wno-error=unknown-warning-option -Wno-error=unused-macros -Wno-unused-macros -Wno-error=reserved-identifier -Wno-error=missing-prototypes -Wno-error=strict-prototypes -Wno-error=unused-parameter -Wno-error=missing-noreturn -Wno-error=sign-conversion -Wno-error=missing-variable-declarations -Wno-error=nonportable-system-include-path -Wno-error=language-extension-token -Wno-error=implicit-int-conversion -Wno-error=pointer-integer-compare -Wno-error=implicit -Wno-error=incompatible-pointer-types -Qunused-arguments -ferror-limit=0
 set CGO_CXXFLAGS=%CGO_CFLAGS%
 
-rem Instruct the Go toolchain (GOGCCFLAGS) to pass these flags too when it invokes clang-cl
-set GOGCCFLAGS=-Wno-error=reserved-identifier -Wno-error=unknown-argument -Wno-error=unknown-warning-option -Wno-error=unused-macros -Qunused-arguments
+rem Use GCC for the entire build process to avoid cgo type checking issues
+set CC=gcc
+set CXX=g++
 
-set CC=clang-cl
-set CXX=clang-cl
+rem Instruct the Go toolchain (GOGCCFLAGS) to pass these flags too when it invokes clang-cl
+set GOGCCFLAGS=-Wno-error=reserved-identifier -Wno-error=unknown-argument -Wno-error=unknown-warning-option -Wno-error=unused-macros -Wno-error=missing-prototypes -Wno-error=strict-prototypes -Wno-error=unused-parameter -Wno-error=missing-noreturn -Wno-error=sign-conversion -Wno-error=missing-variable-declarations -Wno-error=nonportable-system-include-path -Wno-error=language-extension-token -Wno-error=implicit-int-conversion -Wno-error=pointer-integer-compare -Qunused-arguments
+
+set CC="C:\Program Files\LLVM\bin\clang-cl.exe"
+set CXX="C:\Program Files\LLVM\bin\clang-cl.exe"
 set CGO_ENABLED=1
 
 cd /d "%~dp0\.."

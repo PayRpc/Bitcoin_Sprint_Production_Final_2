@@ -13,16 +13,27 @@ where cl || (
 set CC=cl
 set CXX=cl
 set CGO_ENABLED=1
+set CGO_CFLAGS=-D_CRT_SECURE_NO_WARNINGS
+set CGO_CXXFLAGS=-D_CRT_SECURE_NO_WARNINGS
 
 cd /d "%~dp0\.."
 echo Building Go smoke test (MSVC)...
-go env
+echo CC=%CC%
+echo CXX=%CXX%
+echo CGO_ENABLED=%CGO_ENABLED%
+
 go build -v ./cmd/smoke
 if %ERRORLEVEL% neq 0 (
   echo GO BUILD FAILED exit %ERRORLEVEL%
   exit /b %ERRORLEVEL%
 )
 
-echo Go build complete.
+echo.
+echo GO BUILD SUCCESS
+echo.
+echo Running smoke test...
+go run ./cmd/smoke
+
+echo Go build and test complete.
 endlocal
 exit /b 0
