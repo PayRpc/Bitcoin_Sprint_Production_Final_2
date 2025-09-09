@@ -15,7 +15,7 @@ package securebuf
 typedef void* SecureBufferHandle;
 
 extern SecureBufferHandle secure_buffer_new(size_t capacity);
-extern int secure_buffer_write(SecureBufferHandle buffer, const uint8_t* data, size_t len);
+// #cgo windows LDFLAGS: -L${SRCDIR}/../../secure/rust/target/release -lsecurebuffer -lws2_32 -ladvapi32 -luserenv
 extern int secure_buffer_read(SecureBufferHandle buffer, uint8_t* dst, size_t len, size_t* bytes_read);
 extern size_t secure_buffer_len(SecureBufferHandle buffer);
 extern size_t secure_buffer_capacity(SecureBufferHandle buffer);

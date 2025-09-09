@@ -6,7 +6,7 @@ package securebuf
 // Bitcoin Bloom Filter FFI - Temporarily disabled to focus on ETH/SOL connectivity
 
 /*
-#cgo LDFLAGS: -L../../secure/rust/target/x86_64-pc-windows-gnu/release -lsecurebuffer
+// #cgo windows LDFLAGS: -L${SRCDIR}/../../secure/rust/target/release -lsecurebuffer -lws2_32 -ladvapi32 -luserenv
 #include "../../secure/rust/include/bloom_filter.h"
 #include "../../secure/rust/include/securebuffer.h"
 #include <stdlib.h>
